@@ -82,6 +82,7 @@ Binawatch_apicaller::curl_api( string &url, string &result_json)
 		curl_easy_setopt(curl, CURLOPT_URL, url.c_str() );
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, Binawatch_apicaller::curl_cb);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &result_json );
+		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
 
 		res = curl_easy_perform(curl);
 

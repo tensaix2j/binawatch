@@ -227,6 +227,12 @@ Binawatch_httpd::answer_to_connection(
 
         ret = response_with_static_resource( connection,  response, mime_type, url , &sbuf) ;
     
+    } else if ( strcmp( url, "/" ) == 0 ) {
+
+        sprintf( mime_type, "text/html" );
+        ret = response_with_static_resource( connection,  response, mime_type, "/binawatch.html" , &sbuf) ;
+            
+
     } else if ( strcmp( url , "/binawatch_tickers_json" ) == 0 ) {
 
         ret = response_with_dynamic_response( connection,  response );

@@ -6,6 +6,124 @@
 struct Binawatch_shared_data* Binawatch_apicaller::shared_data = NULL;
 
 
+
+//--------------------
+// Get Best price/qty on the order book for all symbols.
+
+void 
+Binawatch_apicaller::get_allBookTickers() 
+{	
+
+	write_log( "<Binawatch_apicaller::get_allBookTickers>" ) ;
+
+	string url(BINANCE_HOST);  
+	url += "/api/v1/ticker/allBookTickers";
+
+	string result_json;
+	
+	curl_api( url, result_json) ;
+
+
+	if ( result_json.size() > 0 ) {
+		
+		try {
+			Json::Reader reader;
+	    	Json::Value obj;
+	    	
+	    	reader.parse( result_json , obj);
+	    	
+	    	string symbol;
+		    double bidPrice, askPrice, bidQty, askQty;
+
+	    	for (int i = 0; i < obj.size(); i++){
+
+	    		symbol 		= obj[i]["symbol"].asString();
+	    		bidPrice    = atof( obj[i]["bidPrice"].asString().c_str() );
+	        	bidQty      = atof( obj[i]["bidQty"].asString().c_str() );
+	        	askPrice    = atof ( obj[i]["askPrice"].asString().c_str() );
+	        	askQty      = atof( obj[i]["askQty"].asString().c_str() );
+	        	
+	        	
+        		if ( shared_data ) {
+
+        			shared_data->bidPrice[symbol] 	= bidPrice;
+					shared_data->bidQty[symbol] 	= bidQty;
+		 			shared_data->askPrice[symbol] 	= askPrice;
+		 			shared_data->askQty[symbol] 	= askQty;
+		 		}
+	 		}
+	    } catch ( exception &e ) {
+		 	write_log( "<Binawatch_apicaller::get_allBookTickers> Error ! %s", e.what() ); 
+		}   
+		write_log( "<Binawatch_apicaller::get_allBookTickers> Done." ) ;
+	
+	} else {
+		write_log( "<Binawatch_apicaller::get_allBookTickers> Failed to get anything." ) ;
+	}
+
+
+}
+
+
+
+
+
+
+
+
+//--------------------
+// Get current account information.
+
+void 
+Binawatch_apicaller::get_account() 
+{	
+
+	write_log( "<Binawatch_apicaller::get_account>" ) ;
+
+	string url(BINANCE_HOST);
+	url += "/api/v3/account";
+	
+	string result_json;
+		
+	curl_api( url, result_json) ;
+
+	if ( result_json.size() > 0 ) {
+		
+		try {
+			Json::Reader reader;
+	    	Json::Value obj;
+	    	
+	    	reader.parse( result_json , obj);
+	    	
+	    	for (int i = 0; i < obj["balances"].size(); i++){
+
+	    		string asset 		= obj[i]["asset"].asString();
+	    		double freeamt    	= atof( obj[i]["free"].asString().c_str() );
+	        	double lockedamt    = atof( obj[i]["locked"].asString().c_str() );
+	        	
+	 		}
+	    } catch ( exception &e ) {
+		 	write_log( "<Binawatch_apicaller::get_account> Error ! %s", e.what() ); 
+		}   
+		write_log( "<Binawatch_apicaller::get_account> Done." ) ;
+	
+	} else {
+		write_log( "<Binawatch_apicaller::get_account> Failed to get anything." ) ;
+	}
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
 //------------------------
 void 
 Binawatch_apicaller::write_log( const char *fmt, ... ) 
@@ -103,73 +221,12 @@ Binawatch_apicaller::curl_api( string &url, string &result_json)
 
 
 
-//--------------------
-// Get market data
-void 
-Binawatch_apicaller::get_allBookTickers() 
-{	
-
-	write_log( "<Binawatch_apicaller::get_allBookTickers>" ) ;
-
-	string result_json;
-	string url = "https://www.binance.com/api/v1/ticker/allBookTickers";
-	curl_api( url, result_json) ;
-
-
-	if ( result_json.size() > 0 ) {
-		
-		try {
-			Json::Reader reader;
-	    	Json::Value obj;
-	    	
-	    	reader.parse( result_json , obj);
-	    	
-	    	string symbol;
-		    double bidPrice, askPrice, bidQty, askQty;
-
-	    	for (int i = 0; i < obj.size(); i++){
-
-	    		symbol 		= obj[i]["symbol"].asString();
-	    		bidPrice    = atof( obj[i]["bidPrice"].asString().c_str() );
-	        	bidQty      = atof( obj[i]["bidQty"].asString().c_str() );
-	        	askPrice    = atof ( obj[i]["askPrice"].asString().c_str() );
-	        	askQty      = atof( obj[i]["askQty"].asString().c_str() );
-	        	
-	        	
-        		if ( shared_data ) {
-
-        			shared_data->bidPrice[symbol] 	= bidPrice;
-					shared_data->bidQty[symbol] 	= bidQty;
-		 			shared_data->askPrice[symbol] 	= askPrice;
-		 			shared_data->askQty[symbol] 	= askQty;
-		 		}
-	 		}
-	    } catch ( exception &e ) {
-		 	write_log( "<Binawatch_apicaller::get_allBookTickers> Error ! %s", e.what() ); 
-		}   
-		write_log( "<Binawatch_apicaller::get_allBookTickers> Done." ) ;
-	
-	} else {
-		write_log( "<Binawatch_apicaller::get_allBookTickers> Failed to get anything." ) ;
-	}
-
-
-}
-
-
-
-
 //------------------------
 void 
 Binawatch_apicaller::init() 
 {
 	write_log("<Binawatch_apicaller::init>");
 
-	while (1) {
-
-		write_log("<Binawatch_apicaller::init> Calling API...");
-		get_allBookTickers();
-		sleep(60);
-	}
+	
 }
 

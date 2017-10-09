@@ -3,36 +3,18 @@
 function SimpleList() {
 
 	//---------------
-	this.get_exchange_rates = function() {
+	this.get_allBookTickers = function() {
 
 		var sl = this;
-		this.loadJSON("/binawatch_tickers_json", function( obj ) {
-			sl.exchange_rates = obj;
-            sl.render_list();
-            var profile = sl.get_querystring_value("profile") ;
-            if ( profile ) {
-				sl.get_holdings(profile);
-			}	    	
-	    }, function(xhr) {
-	    	console.log("Error!");
-	    });
-	}
-
-	//-----------
-	// Get user's holding from profile
-	this.get_holdings = function( profile_name ) {
+		this.loadJSON("/allBookTickers.json", function( obj ) {
 			
-		var sl = this;
-		this.profile_name = profile_name;
-		this.loadJSON("/" + profile_name + ".json", function( obj ) {
-			sl.profile = obj;
-            sl.render_profile();
+			sl.allBookTickers = obj;
+            sl.render_list();
             	    	
 	    }, function(xhr) {
 	    	console.log("Error!");
 	    });
 	}
-
 
 
 
@@ -88,12 +70,10 @@ function SimpleList() {
 	this.render_list = function() {
 			
 		var mylist = document.getElementById("threadindex_list");
-		this.coin_usdval = {};
-		this.coin_sgdval = {};
-
+		
 		var str = ""
-		if ( typeof this.exchange_rates != 'undefined' ) {
-			var data = this.exchange_rates;
+		if ( typeof this.allBookTickers != 'undefined' ) {
+			var data = this.allBookTickers;
 
 			for ( var i = 0 ; i < data.length ; i++ ) {
 
@@ -102,17 +82,20 @@ function SimpleList() {
 					str += "<li>";
 
 						var symbol 		= data[i]["symbol"];
-						var pair   		= this.sprintf("%sBTC", symbol );
-						
-						var chart_url = this.sprintf("https://www.binance.com/tradeDetail.html?symbol=%s_%s", symbol.slice(0,-3) , symbol.slice(-3)  );	
+						var base_curr   = symbol.slice(-3);
+						var pts 		= 8;
+
+						if ( base_curr != "BTC" && base_curr != "ETH" ) {
+							pts = 2;
+						}
 						
 						str += "<div class='curr_rate_header'>"
-							str += this.sprintf( "<div class='curr_rate_symbol'><a href='%s' target='_blank'>%s</a></div>", chart_url, symbol );
+							str += this.sprintf( "<div class='curr_rate_symbol'>%s</div>", symbol );
 
 						str += "</div>"
 						str += "<div class='curr_rate'>";
-							str += this.sprintf("<div class='curr_rate_inner'>%s BTC</div>", data[i]["bidPrice"].toFixed(8) );
-							str += this.sprintf("<div class='curr_rate_inner'>%s BTC</div>", data[i]["askPrice"].toFixed(8) );
+							str += this.sprintf("<div class='curr_rate_inner'>%s</div>", data[i]["bidPrice"].toFixed(pts) );
+							str += this.sprintf("<div class='curr_rate_inner'>%s</div>", data[i]["askPrice"].toFixed(pts) );
 							
 						str += "</div>";
 						
@@ -124,49 +107,6 @@ function SimpleList() {
 		mylist.innerHTML = str;
 	}
 
-	//------------
-	this.render_profile = function() {
-		
-		if ( typeof this.profile != 'undefined' ) {
-			
-			this.total_usd = 0.0;
-			this.total_sgd = 0.0;
-
-			for ( var key in this.profile ) {
-				
-				var symbol 		= key;
-				var own 		= this.profile[key];
-
-				var dom = document.getElementById("curr_rate_holding_symbol_"+ symbol ) ;
-				if ( dom ) {
-					dom.innerHTML = "You Own : " + own + " " + symbol;
-				
-					var own_usd 	= own * this.coin_usdval[symbol];
-					this.total_usd += own_usd;
-					var dom_usd 	= document.getElementById("curr_rate_holding_usd_" + symbol );
-					if ( dom_usd ) {
-						dom_usd.innerHTML = this.numberWithCommas( own_usd.toFixed(2)  ) + " USD";
-					} 
-
-					var own_sgd 	= own * this.coin_sgdval[symbol];
-					this.total_sgd += own_sgd;
-					var dom_sgd 	= document.getElementById("curr_rate_holding_sgd_" + symbol );
-					if ( dom_sgd ) {
-						dom_sgd.innerHTML = this.numberWithCommas( own_sgd.toFixed(2) ) + " SGD";
-					} 
-
-				}		
-			}
-
-			var str = "<div>";
-				str += this.sprintf( "<div class='profile_header'>%s</div>", this.profile_name );
-				str += this.sprintf( "<div class='curr_rate_holding'>Total USD: %s </div>", this.numberWithCommas( this.total_usd.toFixed(2) ));
-				str += this.sprintf( "<div class='curr_rate_holding'>Total SGD: %s </div>", this.numberWithCommas( this.total_sgd.toFixed(2) ));
-			str += "</div>";
-
-			document.getElementById("li_profile").innerHTML = str;
-		}
-	}
 
 	//--------------
 	this.numberWithCommas = function(x) {
@@ -177,7 +117,7 @@ function SimpleList() {
 
 	//-------------
 	this.init = function() {
-		this.get_exchange_rates();
+		this.get_allBookTickers();
 
 	}
 

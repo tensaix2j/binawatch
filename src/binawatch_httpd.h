@@ -1,7 +1,7 @@
 
 
 
- #include <sys/time.h>
+#include <sys/time.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -20,7 +20,6 @@
 #include <vector>
 #include <fstream>
 
-#include <json/json.h>
 #include <microhttpd.h>
 
 
@@ -28,9 +27,9 @@ using namespace std;
 
 class Binawatch_httpd {
 
+	static map < string, int > sessions_registered;
 
 	public:
-		static struct Binawatch_shared_data *shared_data;
 		static struct MHD_Daemon *daemon;
 		
 		static void write_log( const char *fmt, ... );
@@ -57,14 +56,21 @@ class Binawatch_httpd {
 	        struct stat *sbuf
 	    ) ;
 
-		static int response_with_dynamic_response( 
+		static int response_with_web_service( 
 		    struct MHD_Connection *connection, 
-		    MHD_Response *response
+		    MHD_Response *response,
+		    const char *url
 		); 
+
+		static string get_session( struct MHD_Connection *connection );
+		static string generate_new_session();
+		static void expiring_sessions();
 
 		static int init( int port );
 		static int stop();
 
 };
+
+
 
 

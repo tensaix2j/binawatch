@@ -18,6 +18,7 @@
 
 #include "binawatch_shared_data.h"
 
+#define BINANCE_HOST "https://www.binance.com"
 
 using namespace std;
 
@@ -31,6 +32,8 @@ class Binawatch_apicaller {
 		static void curl_api( string &url, string &result_json );
 		static size_t curl_cb( void *content, size_t size, size_t nmemb, std::string *buffer ) ;
 		static void get_allBookTickers();
+		static void get_account();
+
 };
 
 

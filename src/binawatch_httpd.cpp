@@ -2,36 +2,10 @@
 
 #include "binawatch_httpd.h"
 #include "binawatch_utils.h"
-#include "binawatch_shared_data.h"
+#include "binawatch_webservices.h"
 
-struct Binawatch_shared_data* Binawatch_httpd::shared_data = NULL;
 struct MHD_Daemon * Binawatch_httpd::daemon = NULL;
-    
-
-//-----------------------------------------------
-void 
-Binawatch_httpd::write_log( const char *fmt, ... ) 
-{
-    va_list arg;
-    
-    char new_fmt[1024];
-    
-    struct timeval tv;
-    gettimeofday(&tv, NULL); 
-    time_t t = tv.tv_sec;
-    struct tm * now = localtime( &t );
-
-
-    sprintf( new_fmt , "%04d-%02d-%02d %02d:%02d:%02d %06ld :%s\n" , now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec , tv.tv_usec , fmt );
-
-    va_start (arg, fmt);
-    vfprintf ( stdout, new_fmt, arg);
-    va_end (arg);
-
-    fflush(stdout);
-
-}
-
+map < string, int > Binawatch_httpd::sessions_registered;    
 
 
 //-------------------------------------------------
@@ -50,11 +24,99 @@ Binawatch_httpd::log_http_header (
 
 
 
+//---------------
+string 
+Binawatch_httpd::generate_new_session() 
+{
+
+    char bytearr_session_id[32];
+    ifstream ifs("/dev/urandom");
+    ifs.read( bytearr_session_id, 32);
+    ifs.close();
+    
+    string str_session_id = b2a_hex( bytearr_session_id , 32 );
+    
+    write_log("<Binawatch_httpd::generate_new_session> Registering new session %s", str_session_id.c_str() );
+    sessions_registered[ str_session_id ] = get_current_epoch();
+
+    return str_session_id;
+}
+
+
+
+
+//------------------------------------------
+
+string
+Binawatch_httpd::get_session ( struct MHD_Connection *connection ) 
+{
+
+    write_log("<Binawatch_httpd::get_session>");
+
+    const char *cookie;
+    cookie = MHD_lookup_connection_value (connection, MHD_COOKIE_KIND, "session");
+    string str_session_id;
+
+    if ( cookie != NULL ) {
+
+        str_session_id = string(cookie);
+
+        if ( sessions_registered.find( str_session_id ) == sessions_registered.end() ) { 
+            
+            write_log("<Binawatch_httpd::get_session> Session %s expired on server end, get new one", str_session_id.c_str() );
+            str_session_id = generate_new_session();
+
+        } else {
+
+            write_log("<Binawatch_httpd::get_session> Session %s found !", str_session_id.c_str() );
+
+            // Renew the session expiry time..
+            sessions_registered[ str_session_id ] = get_current_epoch();
+        }
+    } else {
+        str_session_id = generate_new_session();
+    }
+    return str_session_id;
+
+}
+
+
+
+//------------------
+void 
+Binawatch_httpd::expiring_sessions()  
+{
+    map <string,int>::iterator it;
+    for ( it = sessions_registered.begin(); it != sessions_registered.end(); ++it) {
+            
+        string str_session_id    = it->first ;
+        int epoch_started        = it->second ;
+
+        // sessions to expire in 1 hour
+        if ( get_current_epoch() - epoch_started >= 3600 ) {
+            
+            write_log("Session %s expired.", str_session_id.c_str() );
+            sessions_registered.erase( it );
+
+        }
+    }
+
+}
+
+
+
+
+
+
+
+
+
 
 
 //------------------------------------------
 int 
 Binawatch_httpd::response_with_errormsg( 
+
     struct MHD_Connection *connection, 
     MHD_Response *response, 
     int errorcode, 
@@ -87,6 +149,7 @@ Binawatch_httpd::response_with_errormsg(
 //---------------------------------
 int
 Binawatch_httpd::response_with_static_resource( 
+
         struct MHD_Connection *connection, 
         MHD_Response *response,
         char* mime_type,
@@ -127,36 +190,30 @@ Binawatch_httpd::response_with_static_resource(
 
 //---------------------------------
 int
-Binawatch_httpd::response_with_dynamic_response( 
+Binawatch_httpd::response_with_web_service( 
+
         struct MHD_Connection *connection, 
-        MHD_Response *response
+        MHD_Response *response,
+        const char *url
     ) 
 {
 
-    Json::Value tickers_arr(Json::arrayValue);
+    int ret;
+    string str_response;
+    string str_session_id = get_session( connection );
+
+
+    Binawatch_webservices::url_router( url , str_response);
+    
+    response = MHD_create_response_from_buffer ( str_response.size() , (void *)( str_response.c_str() ) , MHD_RESPMEM_PERSISTENT);
+
+
+    // set response header session ID
+    string cookie_kv = "session=";
+    cookie_kv.append( str_session_id );
+    MHD_add_response_header (response, MHD_HTTP_HEADER_SET_COOKIE,  cookie_kv.c_str() );
 
         
-    map <string,double>::iterator it;
-    for ( it = shared_data->bidPrice.begin(); it != shared_data->bidPrice.end(); ++it) {
-            
-        Json::Value symbol;
-        symbol["symbol"]    = it->first ;
-        symbol["bidPrice"]  = it->second ;
-        symbol["bidQty"]    = shared_data->bidQty[it->first] ;
-        symbol["askPrice"]  = shared_data->askPrice[it->first] ;
-        symbol["askQty"]    = shared_data->askQty[it->first] ;
-        tickers_arr.append( symbol );
-
-    }
-   
-
-    Json::FastWriter fastWriter;
-    string str_response = fastWriter.write(tickers_arr) ;
-
-
-    int ret;
-  
-    response = MHD_create_response_from_buffer ( str_response.size() , (void *)( str_response.c_str() ) , MHD_RESPMEM_PERSISTENT);
     ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
 
@@ -171,6 +228,7 @@ Binawatch_httpd::response_with_dynamic_response(
 //-------------------
 int 
 Binawatch_httpd::answer_to_connection( 
+
         void *cls, 
         struct MHD_Connection *connection,
         const char *url, 
@@ -190,6 +248,7 @@ Binawatch_httpd::answer_to_connection(
     struct stat sbuf;
     int ret;
     bool is_static_resource = 0;
+    bool is_web_service     = 0;
     char mime_type[128] = "text/plain";
         
 
@@ -217,6 +276,17 @@ Binawatch_httpd::answer_to_connection(
 
         sprintf( mime_type, "image/svg" );
         is_static_resource = 1;    
+
+    } else if ( fnmatch("/*.ico", url , FNM_PATHNAME ) == 0  ) {
+
+        sprintf( mime_type, "image/ico" );
+        is_static_resource = 1;    
+
+    } else if ( fnmatch("/*.json", url , FNM_PATHNAME ) == 0 ) {
+
+        sprintf( mime_type, "text/json" );
+        is_web_service = 1;
+
     }
 
 
@@ -227,24 +297,25 @@ Binawatch_httpd::answer_to_connection(
 
         ret = response_with_static_resource( connection,  response, mime_type, url , &sbuf) ;
     
+    } else if ( is_web_service == 1 ) {
+
+        ret = response_with_web_service( connection,  response , url );
+
     } else if ( strcmp( url, "/" ) == 0 ) {
 
         sprintf( mime_type, "text/html" );
         ret = response_with_static_resource( connection,  response, mime_type, "/binawatch.html" , &sbuf) ;
-            
-
-    } else if ( strcmp( url , "/binawatch_tickers_json" ) == 0 ) {
-
-        ret = response_with_dynamic_response( connection,  response );
-
+        
     } else {
 
         ret = response_with_errormsg( connection, response, 401, "Unauthorized Request Type!" );
-
     }
 
     return ret;
 }
+
+
+
 
 
 //-------------
@@ -260,6 +331,34 @@ Binawatch_httpd::stop( ) {
     return 0; 
 }
 
+
+
+
+
+
+//-----------------------------------------------
+void 
+Binawatch_httpd::write_log( const char *fmt, ... ) 
+{
+    va_list arg;
+    
+    char new_fmt[1024];
+    
+    struct timeval tv;
+    gettimeofday(&tv, NULL); 
+    time_t t = tv.tv_sec;
+    struct tm * now = localtime( &t );
+
+
+    sprintf( new_fmt , "%04d-%02d-%02d %02d:%02d:%02d %06ld :%s\n" , now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec , tv.tv_usec , fmt );
+
+    va_start (arg, fmt);
+    vfprintf ( stdout, new_fmt, arg);
+    va_end (arg);
+
+    fflush(stdout);
+
+}
 
 
 

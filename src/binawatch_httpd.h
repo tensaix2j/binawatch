@@ -25,11 +25,28 @@
 
 using namespace std;
 
+
+//---------------------------------
+struct request { 
+	struct MHD_Connection *connection;
+	MHD_Response *response;	
+	time_t 	exec_time;
+	int request_type;
+	string task;
+};
+
+
+
+
+
+//-----------------------------
 class Binawatch_httpd {
 
-	static map < string, int > sessions_registered;
+	static map 		< string, time_t > sessions_registered;
+	static vector 	< struct request > request_queue;
 
 	public:
+
 		static struct MHD_Daemon *daemon;
 		
 		static void write_log( const char *fmt, ... );
@@ -65,9 +82,18 @@ class Binawatch_httpd {
 		static string get_session( struct MHD_Connection *connection );
 		static string generate_new_session();
 		static void expiring_sessions();
+		static bool has_pending_request();
+		static void process_request_queue();
 
 		static int init( int port );
 		static int stop();
+
+		static void queue_request_item( 
+		    time_t exec_time,
+		    const char *task, 
+		    struct MHD_Connection *connection, 
+		    MHD_Response *response
+		);
 
 };
 

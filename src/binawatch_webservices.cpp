@@ -7,7 +7,7 @@ struct Binawatch_shared_data* Binawatch_webservices::shared_data = NULL;
 
 
 //-----------------
-void 
+int 
 Binawatch_webservices::url_router( const char* url , string &str_response ) {
 
     if ( strcmp( url , "/allBookTickers.json" ) == 0 ) {
@@ -28,7 +28,8 @@ Binawatch_webservices::url_router( const char* url , string &str_response ) {
         str_response = fastWriter.write(json_response) ;
     }
 
-}
+    return 0;
+}   
 
 
 //---------------------------
@@ -65,6 +66,7 @@ Binawatch_webservices::get_account( string &str_response ) {
     Json::Value account_obj;
     account_obj["username"] = "hello world";
 
+    sleep(20);
     Json::FastWriter fastWriter;
     str_response = fastWriter.write(account_obj) ;
     

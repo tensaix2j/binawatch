@@ -2,10 +2,13 @@
 
 #include "binawatch_httpd.h"
 #include "binawatch_utils.h"
+#include "binawatch_apicaller.h"
 #include "binawatch_webservices.h"
 
+
 struct MHD_Daemon * Binawatch_httpd::daemon = NULL;
-map < string, int > Binawatch_httpd::sessions_registered;    
+map    < string, time_t > Binawatch_httpd::sessions_registered;
+vector < struct request > Binawatch_httpd::request_queue;
 
 
 //-------------------------------------------------
@@ -37,7 +40,7 @@ Binawatch_httpd::generate_new_session()
     string str_session_id = b2a_hex( bytearr_session_id , 32 );
     
     write_log("<Binawatch_httpd::generate_new_session> Registering new session %s", str_session_id.c_str() );
-    sessions_registered[ str_session_id ] = get_current_epoch();
+    sessions_registered[ str_session_id ] = get_current_epoch() + 3600;
 
     return str_session_id;
 }
@@ -71,7 +74,7 @@ Binawatch_httpd::get_session ( struct MHD_Connection *connection )
             write_log("<Binawatch_httpd::get_session> Session %s found !", str_session_id.c_str() );
 
             // Renew the session expiry time..
-            sessions_registered[ str_session_id ] = get_current_epoch();
+            sessions_registered[ str_session_id ] = get_current_epoch() + 3600;
         }
     } else {
         str_session_id = generate_new_session();
@@ -86,14 +89,14 @@ Binawatch_httpd::get_session ( struct MHD_Connection *connection )
 void 
 Binawatch_httpd::expiring_sessions()  
 {
-    map <string,int>::iterator it;
+    map <string,time_t>::iterator it;
     for ( it = sessions_registered.begin(); it != sessions_registered.end(); ++it) {
             
-        string str_session_id    = it->first ;
-        int epoch_started        = it->second ;
+        string str_session_id       = it->first ;
+        time_t session_expiry        = it->second ;
 
         // sessions to expire in 1 hour
-        if ( get_current_epoch() - epoch_started >= 3600 ) {
+        if ( get_current_epoch() >= session_expiry  ) {
             
             write_log("Session %s expired.", str_session_id.c_str() );
             sessions_registered.erase( it );
@@ -205,9 +208,8 @@ Binawatch_httpd::response_with_web_service(
 
     Binawatch_webservices::url_router( url , str_response);
     
+    // Response now...
     response = MHD_create_response_from_buffer ( str_response.size() , (void *)( str_response.c_str() ) , MHD_RESPMEM_PERSISTENT);
-
-
     // set response header session ID
     string cookie_kv = "session=";
     cookie_kv.append( str_session_id );
@@ -217,6 +219,8 @@ Binawatch_httpd::response_with_web_service(
     ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
 
+
+        
     return ret;
 }
 
@@ -318,6 +322,77 @@ Binawatch_httpd::answer_to_connection(
 
 
 
+//-----------------------------
+bool 
+Binawatch_httpd::has_pending_request() {
+
+    return (request_queue.size() > 0 );
+}
+
+
+//------------
+void
+Binawatch_httpd::process_request_queue() {
+
+    if ( request_queue.size() > 0 ) {
+        
+        if ( get_current_epoch() >= request_queue[0].exec_time ) {
+
+            if ( request_queue[0].task ==  "allBookTickers" ) {
+                
+                Binawatch_apicaller::get_allBookTickers();
+                queue_request_item( get_current_epoch() + 30, "allBookTickers", NULL, NULL );
+
+            } else if ( request_queue[0].task == "expiring_sessions" ) {
+
+                Binawatch_httpd::expiring_sessions();
+                queue_request_item( get_current_epoch() + 3600, "expiring_sessions", NULL, NULL );
+
+            } else if ( request_queue[0].task == "account" ) {
+
+                write_log("\n\nhello world!!!\n\n");
+            }
+            request_queue.erase( request_queue.begin() );
+        }
+    }
+}
+
+//----------------
+// Queue to be dispatched at other thread so don't block the httpd thread.
+void 
+Binawatch_httpd::queue_request_item( 
+    time_t exec_time,
+    const char *task, 
+    struct MHD_Connection *connection, 
+    MHD_Response *response
+) {
+
+    write_log("<Binawatch_httpd::queue_request_item> %d %s", exec_time , task );
+
+    int i;
+    bool inserted = 0;
+
+    struct request r; 
+    r.exec_time = exec_time;
+    r.task = string( task );
+    r.connection = connection;
+    r.response = response; 
+
+    for ( i = 0 ; i < request_queue.size() ; i++ ) {
+        if ( r.exec_time < request_queue[i].exec_time ) {
+            request_queue.insert( request_queue.begin() + i , r);
+            inserted = 1;
+            break;
+        }
+    }
+    if ( inserted == 0 ) {
+        request_queue.push_back( r );
+    }
+
+}
+
+
+
 //-------------
 int 
 Binawatch_httpd::stop( ) {
@@ -386,8 +461,12 @@ Binawatch_httpd::init( int port )
         return -1;
     }   
 
-
     write_log("<Binawatch_httpd::init> HTTPD started at port %d", port );
+
+    Binawatch_apicaller::shared_data = Binawatch_webservices::shared_data;
+    queue_request_item( get_current_epoch(), "allBookTickers",     NULL, NULL );
+    queue_request_item( get_current_epoch() + 3600, "expiring_sessions",  NULL, NULL );
+
 
     return 0;   
 }

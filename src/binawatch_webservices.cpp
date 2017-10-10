@@ -1,14 +1,16 @@
 
 #include "binawatch_shared_data.h"
 #include "binawatch_webservices.h"
-
+#include "binawatch_apicaller.h"
+#include "binawatch_httpd.h"
+#include "binawatch_utils.h"
 
 struct Binawatch_shared_data* Binawatch_webservices::shared_data = NULL;
 
 
 //-----------------
 int 
-Binawatch_webservices::url_router( const char* url , string &str_response ) {
+Binawatch_webservices::url_router( struct MHD_Connection *connection, const char* url , string &str_response ) {
 
     if ( strcmp( url , "/allBookTickers.json" ) == 0 ) {
         
@@ -17,6 +19,14 @@ Binawatch_webservices::url_router( const char* url , string &str_response ) {
     } else if ( strcmp( url , "/account.json" ) == 0 ) {
 
         Binawatch_webservices::get_account(str_response);
+
+    } else if ( strcmp( url, "/register.json") == 0 ) {
+
+        const char* username = MHD_lookup_connection_value( connection, MHD_GET_ARGUMENT_KIND, "username");
+        Binawatch_httpd::write_log("username = %s" , username);
+        
+        const char* password = MHD_lookup_connection_value( connection, MHD_GET_ARGUMENT_KIND, "password");
+        Binawatch_httpd::write_log("password = %s" , password);
 
 
     } else {
@@ -63,11 +73,8 @@ Binawatch_webservices::get_allBookTickers( string &str_response) {
 void
 Binawatch_webservices::get_account( string &str_response ) {
 
-    Json::Value account_obj;
-    account_obj["username"] = "hello world";
-
-    sleep(20);
-    Json::FastWriter fastWriter;
-    str_response = fastWriter.write(account_obj) ;
-    
+    Binawatch_apicaller::get_account(
+        "w5mAgtyqd7NWoQVle0UbA56lb0ZpYkBtCUBcuNlgGa5Jn7wznU22ea8IWkWIxKxu",
+        "NIteeFjxCrbYWIEXOa6FTSIQrWeJOoXG1fUaU7sgT2SGjlp2iFoyXUr7hbmQouBp");
+        
 }

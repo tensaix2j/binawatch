@@ -44,10 +44,29 @@ string b2a_hex( char *byte_arr, int n ) {
 
 
 //---------------------------------
-unsigned int get_current_epoch( ) {
+time_t get_current_epoch( ) {
 
     struct timeval tv;
     gettimeofday(&tv, NULL); 
 
     return tv.tv_sec ;
 }
+
+//---------------------------------
+unsigned long get_current_ms_epoch( ) {
+
+    struct timeval tv;
+    gettimeofday(&tv, NULL); 
+
+    return tv.tv_sec * 1000 + tv.tv_usec / 1000 ;
+
+}
+
+//---------------------------
+string hmac_sha256( const char *key, const char *data) {
+
+    unsigned char* digest;
+    digest = HMAC(EVP_sha256(), key, strlen(key), (unsigned char*)data, strlen(data), NULL, NULL);    
+    return b2a_hex( (char *)digest, 32 );
+}   
+

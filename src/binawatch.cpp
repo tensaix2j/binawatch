@@ -25,9 +25,9 @@ int main( int argc , char *argv[] ) {
 			
 			Binawatch_httpd::process_request_queue();
 		
-		} else {
-			usleep(1000);
 		}
+		usleep(1000);
+		
 	}
 
 

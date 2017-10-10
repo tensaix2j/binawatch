@@ -21,7 +21,7 @@ Binawatch_apicaller::get_allBookTickers()
 
 	string result_json;
 	
-	curl_api( url, result_json) ;
+	curl_api( url, result_json ) ;
 
 
 	if ( result_json.size() > 0 ) {
@@ -73,38 +73,47 @@ Binawatch_apicaller::get_allBookTickers()
 
 //--------------------
 // Get current account information.
+/*
+Parameters:
+Name	Type	Mandatory	Description
+recvWindow	LONG	NO	
+timestamp	LONG	YES
+*/
+
 
 void 
-Binawatch_apicaller::get_account() 
+Binawatch_apicaller::get_account( const char* api_key, const char *secret_key ) 
 {	
 
 	write_log( "<Binawatch_apicaller::get_account>" ) ;
 
 	string url(BINANCE_HOST);
-	url += "/api/v3/account";
+	url += "/api/v3/account?";
+
+	string querystring("timestamp=");
+	querystring.append( to_string( get_current_ms_epoch() ) );
+
+	string signature =  hmac_sha256( secret_key, querystring.c_str() );
+	querystring.append( "&signature=");
+	querystring.append( signature );
+
+	url.append( querystring );
+	vector <string> extra_http_header;
+	string header_chunk("X-MBX-APIKEY: ");
+	header_chunk.append( api_key );
+	extra_http_header.push_back(header_chunk);
+
+	write_log( "<Binawatch_apicaller::get_account> url = |%s|" , url.c_str() ) ;
 	
 	string result_json;
 		
-	curl_api( url, result_json) ;
+	curl_api_with_header( url, result_json , extra_http_header ) ;
 
 	if ( result_json.size() > 0 ) {
 		
-		try {
-			Json::Reader reader;
-	    	Json::Value obj;
-	    	
-	    	reader.parse( result_json , obj);
-	    	
-	    	for (int i = 0; i < obj["balances"].size(); i++){
-
-	    		string asset 		= obj[i]["asset"].asString();
-	    		double freeamt    	= atof( obj[i]["free"].asString().c_str() );
-	        	double lockedamt    = atof( obj[i]["locked"].asString().c_str() );
-	        	
-	 		}
-	    } catch ( exception &e ) {
-		 	write_log( "<Binawatch_apicaller::get_account> Error ! %s", e.what() ); 
-		}   
+		write_log( "<Binawatch_apicaller::get_account> %s." , result_json.c_str() ) ;
+	
+		
 		write_log( "<Binawatch_apicaller::get_account> Done." ) ;
 	
 	} else {
@@ -180,11 +189,19 @@ Binawatch_apicaller::curl_cb( void *content, size_t size, size_t nmemb, std::str
 
 
 
+//--------------------------------------------------
+void 
+Binawatch_apicaller::curl_api( string &url, string &result_json ) {
+	vector <string> v;
+	curl_api_with_header( url , result_json , v );	
+} 
+
+
 
 //--------------------
 // Do the curl
 void 
-Binawatch_apicaller::curl_api( string &url, string &result_json) 
+Binawatch_apicaller::curl_api_with_header( string &url, string &result_json, vector <string> &extra_http_header ) 
 {
 	write_log( "<Binawatch_apicaller::curl_api>" ) ;
 
@@ -201,6 +218,15 @@ Binawatch_apicaller::curl_api( string &url, string &result_json)
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, Binawatch_apicaller::curl_cb);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &result_json );
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
+
+		if ( extra_http_header.size() > 0 ) {
+			
+			struct curl_slist *chunk = NULL;
+			for ( int i = 0 ; i < extra_http_header.size() ;i++ ) {
+				chunk = curl_slist_append(chunk, extra_http_header[i].c_str() );
+			}
+ 			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
+ 		}
 
 		res = curl_easy_perform(curl);
 

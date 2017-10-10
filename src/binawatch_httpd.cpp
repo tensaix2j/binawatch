@@ -206,8 +206,8 @@ Binawatch_httpd::response_with_web_service(
     string str_session_id = get_session( connection );
 
 
-    Binawatch_webservices::url_router( url , str_response);
-    
+    Binawatch_webservices::url_router( connection,  url , str_response);
+        
     // Response now...
     response = MHD_create_response_from_buffer ( str_response.size() , (void *)( str_response.c_str() ) , MHD_RESPMEM_PERSISTENT);
     // set response header session ID
@@ -257,36 +257,36 @@ Binawatch_httpd::answer_to_connection(
         
 
 
-    if ( fnmatch( "/*.css", url, FNM_PATHNAME ) == 0 ) {
+    if ( fnmatch( "/*.css", url, FNM_LEADING_DIR ) == 0 ) {
     
         sprintf( mime_type, "text/css" );
         is_static_resource = 1;
     
-    } else if ( fnmatch("/*.html", url, FNM_PATHNAME ) == 0 ) {
+    } else if ( fnmatch("/*.html", url, FNM_LEADING_DIR ) == 0 ) {
         sprintf( mime_type, "text/html" );
         is_static_resource = 1;
     
-    } else if ( fnmatch("/*.js", url , FNM_PATHNAME ) == 0  ) {
+    } else if ( fnmatch("/*.js", url , FNM_LEADING_DIR ) == 0  ) {
 
         sprintf( mime_type, "text/plain" );
         is_static_resource = 1;
 
-    } else if ( fnmatch("/*.png", url , FNM_PATHNAME ) == 0  ) {
+    } else if ( fnmatch("/*.png", url , FNM_LEADING_DIR ) == 0  ) {
 
         sprintf( mime_type, "image/png" );
         is_static_resource = 1;    
     
-    } else if ( fnmatch("/*.svg", url , FNM_PATHNAME ) == 0  ) {
+    } else if ( fnmatch("/*.svg", url , FNM_LEADING_DIR ) == 0  ) {
 
         sprintf( mime_type, "image/svg" );
         is_static_resource = 1;    
 
-    } else if ( fnmatch("/*.ico", url , FNM_PATHNAME ) == 0  ) {
+    } else if ( fnmatch("/*.ico", url , FNM_LEADING_DIR ) == 0  ) {
 
         sprintf( mime_type, "image/ico" );
         is_static_resource = 1;    
 
-    } else if ( fnmatch("/*.json", url , FNM_PATHNAME ) == 0 ) {
+    } else if ( fnmatch("/*.json", url , FNM_LEADING_DIR ) == 0 ) {
 
         sprintf( mime_type, "text/json" );
         is_web_service = 1;
@@ -326,8 +326,9 @@ Binawatch_httpd::answer_to_connection(
 bool 
 Binawatch_httpd::has_pending_request() {
 
-    return (request_queue.size() > 0 );
+    return (request_queue.size() > 0 && get_current_epoch() > request_queue[0].exec_time );
 }
+
 
 
 //------------

@@ -14,7 +14,7 @@ jsoncpp_src=${jsoncpp_dir}/src
 
 build_dir=../bin
 
-binawatch: binawatch_httpd.o binawatch_apicaller.o binawatch_webservices.o jsoncpp.o
+binawatch: binawatch_httpd.o binawatch_apicaller.o binawatch_webservices.o binawatch_db.o jsoncpp.o
 	g++ -I$(libmicrohttpd_include) -I$(libcurl_include) -I$(jsoncpp_include) binawatch.cpp \
 	-L$(libmicrohttpd_lib) \
 	-L$(libcurl_lib) \
@@ -22,8 +22,9 @@ binawatch: binawatch_httpd.o binawatch_apicaller.o binawatch_webservices.o jsonc
 	${build_dir}/binawatch_httpd.o \
 	${build_dir}/binawatch_apicaller.o \
 	${build_dir}/binawatch_webservices.o \
+	${build_dir}/binawatch_db.o \
 	${build_dir}/jsoncpp.o \
-	-lmicrohttpd -lcurl -o ${build_dir}/binawatch
+	-lmicrohttpd -lcurl -lcrypto -lsqlite3 -o ${build_dir}/binawatch
 
 
 
@@ -31,12 +32,16 @@ binawatch_apicaller.o: binawatch_apicaller.cpp binawatch_apicaller.h
 	g++ -I$(libcurl_include) -I$(jsoncpp_include)  -c binawatch_apicaller.cpp  -o ${build_dir}/binawatch_apicaller.o 
 
 
-binawatch_httpd.o: binawatch_httpd.cpp binawatch_httpd.h binawatch_utils.o binawatch_webservices.o
+binawatch_httpd.o: binawatch_httpd.cpp binawatch_httpd.h binawatch_utils.o binawatch_webservices.o binawatch_db.o
 	g++ -I$(libmicrohttpd_include) -I$(jsoncpp_include)  -c binawatch_httpd.cpp -o ${build_dir}/binawatch_httpd.o 
 
 
+binawatch_db.o: binawatch_db.cpp binawatch_db.h
+	g++  -I$(libmicrohttpd_include) -c binawatch_db.cpp -o ${build_dir}/binawatch_db.o
+
+
 binawatch_webservices.o: binawatch_webservices.cpp binawatch_webservices.h 
-	g++ -I$(jsoncpp_include)  -c binawatch_webservices.cpp  -o ${build_dir}/binawatch_webservices.o 
+	g++ -I$(libmicrohttpd_include) -I$(jsoncpp_include)  -c binawatch_webservices.cpp  -o ${build_dir}/binawatch_webservices.o 
 
 
 binawatch_utils.o: binawatch_utils.h binawatch_utils.cpp 

@@ -24,6 +24,7 @@ class Binawatch_webservices {
 		static int url_router( struct MHD_Connection *connection, const char* url , string &str_response );
 		static void get_allBookTickers( string &str_response );
 		static void get_account( string &str_response );
+		static void register_account( string &str_response, string &username , string &password ) ;
 };
 
 

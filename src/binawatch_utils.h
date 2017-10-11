@@ -9,11 +9,13 @@
 #include <string.h>
 #include <sys/time.h>
 #include <openssl/hmac.h>
+#include <openssl/sha.h>
 
 using namespace std;
 
 void split_string( string &s, char delim, vector <string> &result);
 bool replace_string( string& str, const char *from, const char *to);
+bool replace_string_once( string& str, const char *from, const char *to);
 
 
 string b2a_hex( char *byte_arr, int n );
@@ -35,6 +37,6 @@ inline bool file_exists (const std::string& name) {
 }
 
 string hmac_sha256( const char *key, const char *data);
-
+string sha256( const char *data );
 
 #endif

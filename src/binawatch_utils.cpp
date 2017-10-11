@@ -16,7 +16,7 @@ void split_string( string &s, char delim, vector <string> &result) {
 
 
 //--------------------------------
-bool replace_string( string& str, const char *from, const char *to) {
+bool replace_string_once( string& str, const char *from, const char *to) {
 
     size_t start_pos = str.find(from);
     if( start_pos == std::string::npos ) {
@@ -24,6 +24,20 @@ bool replace_string( string& str, const char *from, const char *to) {
     }
     str.replace(start_pos, strlen(from), to);
     return true;
+}
+
+
+//--------------------------------
+bool replace_string( string& str, const char *from, const char *to) {
+
+    bool found = false;
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, strlen( from ), to);
+        found = true;
+        start_pos += strlen(to);
+    }
+    return found;
 }
 
 
@@ -70,3 +84,14 @@ string hmac_sha256( const char *key, const char *data) {
     return b2a_hex( (char *)digest, 32 );
 }   
 
+//------------------------------
+string sha256( const char *data ) {
+
+    unsigned char digest[32];
+    SHA256_CTX sha256;
+    SHA256_Init(&sha256);
+    SHA256_Update(&sha256, data, strlen(data) );
+    SHA256_Final(digest, &sha256);
+    return b2a_hex( (char *)digest, 32 );
+    
+}

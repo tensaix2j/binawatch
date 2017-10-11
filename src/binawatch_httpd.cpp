@@ -438,6 +438,22 @@ Binawatch_httpd::write_log( const char *fmt, ... )
 
 
 
+//-----------------------------------------------
+// Write log to channel without any timestamp nor new line
+void 
+Binawatch_httpd::write_log_clean( const char *fmt, ... ) 
+{
+    va_list arg;
+    va_start (arg, fmt);
+    vfprintf ( stdout, fmt, arg);
+    va_end (arg);
+
+    fflush(stdout);
+
+}
+
+
+
 
 //--------------------------------------------------------
 // Start the httpd server
@@ -465,9 +481,7 @@ Binawatch_httpd::init( int port )
     write_log("<Binawatch_httpd::init> HTTPD started at port %d", port );
 
     Binawatch_apicaller::shared_data = Binawatch_webservices::shared_data;
-    queue_request_item( get_current_epoch(), "allBookTickers",     NULL, NULL );
-    queue_request_item( get_current_epoch() + 3600, "expiring_sessions",  NULL, NULL );
-
+    
 
     return 0;   
 }

@@ -6,24 +6,19 @@ function SimpleList() {
 	this.get_allBookTickers = function() {
 
 		var sl = this;
-		loadJSON("/allBookTickers.json", function( obj ) {
+		$.getJSON("/allBookTickers.json", function( response ) {
 			
-			sl.allBookTickers = obj;
+			sl.allBookTickers = response;
             sl.render_list();
             	    	
-	    }, function(xhr) {
-	    	console.log("Error!");
 	    });
 	}
 
 
-
-	
-
 	//-----
 	this.render_list = function() {
 			
-		var mylist = document.getElementById("threadindex_list");
+		var mylist = $("#threadindex_list");
 		
 		var str = ""
 		if ( typeof this.allBookTickers != 'undefined' ) {
@@ -58,7 +53,8 @@ function SimpleList() {
 				}
 			}
 		}	
-		mylist.innerHTML = str;
+		
+		mylist.html(str);
 	}
 
 	//-------------
@@ -69,8 +65,10 @@ function SimpleList() {
 
 }
 
-document.addEventListener("DOMContentLoaded", function() {
+
+$(document).ready(function(){
 	sl = new SimpleList();
 	sl.init();
 });
 
+	

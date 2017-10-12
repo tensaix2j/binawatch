@@ -16,14 +16,14 @@ void split_string( string &s, char delim, vector <string> &result) {
 
 
 //--------------------------------
-bool replace_string_once( string& str, const char *from, const char *to) {
+int replace_string_once( string& str, const char *from, const char *to, int offset) {
 
-    size_t start_pos = str.find(from);
+    size_t start_pos = str.find(from, offset);
     if( start_pos == std::string::npos ) {
-        return false;
+        return 0;
     }
     str.replace(start_pos, strlen(from), to);
-    return true;
+    return start_pos + strlen(to);
 }
 
 

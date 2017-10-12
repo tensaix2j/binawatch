@@ -21,21 +21,33 @@ Binawatch_webservices::url_router( struct MHD_Connection *connection, const char
 
         Binawatch_webservices::get_account(str_response);
 
+
     } else if ( strcmp( url, "/register.json") == 0 ) {
 
         string username, password;
         const char* cstr_username = MHD_lookup_connection_value( connection, MHD_GET_ARGUMENT_KIND, "username");
         const char* cstr_password = MHD_lookup_connection_value( connection, MHD_GET_ARGUMENT_KIND, "password");
-        username = cstr_username != NULL ? string(cstr_username ) : "";
-        password = cstr_password != NULL ? string(cstr_password ) : "";
+        username = cstr_username? string(cstr_username ) : "";
+        password = cstr_password? string(cstr_password ) : "";
         register_account( str_response, username, password );  
+    
 
+    } else if ( strcmp( url , "/login.json" ) == 0 ) {
+
+        string username, password;
+        const char* cstr_username = MHD_lookup_connection_value( connection, MHD_GET_ARGUMENT_KIND, "username");
+        const char* cstr_password = MHD_lookup_connection_value( connection, MHD_GET_ARGUMENT_KIND, "password");
+        username = cstr_username? string(cstr_username ) : "";
+        password = cstr_password? string(cstr_password ) : "";
+        
+        Binawatch_webservices::login_account(str_response, username, password );
+        
 
     } else {
 
         Json::Value json_response;
-        json_response["status"] = "Not found";
-        json_response["code"] = -1; 
+        json_response["statusmsg"] = "Not found";
+        json_response["statuscode"] = -1; 
         Json::FastWriter fastWriter;
         str_response = fastWriter.write(json_response) ;
     }
@@ -49,8 +61,18 @@ Binawatch_webservices::url_router( struct MHD_Connection *connection, const char
 void
 Binawatch_webservices::get_allBookTickers( string &str_response) {
 
+    Binawatch_httpd::write_log("<Binawatch_webservices::get_allBookTickers>");
+
 	Json::Value tickers_arr(Json::arrayValue);
         
+    // This data can be shared across all users.
+    if ( get_current_epoch() - shared_data->last_query_time  > 5 ) {
+        Binawatch_apicaller::get_allBookTickers();
+    }
+
+    Binawatch_httpd::write_log("<Binawatch_webservices::get_allBookTickers> Ready to response.");
+    
+
     map <string,double>::iterator it;
     for ( it = shared_data->bidPrice.begin(); it != shared_data->bidPrice.end(); ++it) {
             
@@ -106,27 +128,74 @@ Binawatch_webservices::register_account( string &str_response, string &username 
 
             int ret = Binawatch_db::exec_sql("insert into tbl_users(username,hashed_password) values( ?, ? )", sql_args );
             if ( ret == 0 ) {
-                json_response["status"] = "OK";
-                json_response["code"] = 0; 
+                json_response["statusmsg"] = "OK";
+                json_response["statuscode"] = 0; 
             } else {
-                json_response["status"] = "Some error on our server code. We'll fix it a.s.a.p";
-                json_response["code"] = -1; 
+                json_response["statusmsg"] = "Some error on our server code. We'll fix it a.s.a.p";
+                json_response["statuscode"] = -1; 
             }
         } else {
 
             Binawatch_httpd::write_log("Username already exist." );
-            json_response["status"] = "Username already exist.";
-            json_response["code"] = -1; 
+            json_response["statusmsg"] = "Username already exist.";
+            json_response["statuscode"] = -2; 
         }
     } else {
 
-        json_response["status"] = "Username and Password cannot be empty.";
-        json_response["code"] = -1; 
+        json_response["statusmsg"] = "Username and Password cannot be empty.";
+        json_response["statuscode"] = -1; 
         
     }
 
     Json::FastWriter fastWriter;
     str_response = fastWriter.write(json_response) ;
     
+
+}
+
+
+//---------------
+void 
+Binawatch_webservices::login_account( string &str_response, string &username , string &password ) 
+{
+    Binawatch_httpd::write_log("<Binawatch_webservices::login_account> username = %s, password = %s" , username.c_str(), password.c_str() );
+    
+    Json::Value json_response;
+    vector <string> sql_args;
+
+    if ( username != ""  && password != "" ) {
+
+        sql_args.push_back( username );
+
+        Binawatch_db::exec_sql("select username,hashed_password from tbl_users where username = ?", sql_args );
+        if ( Binawatch_db::results_set.size() == 0 ) {
+            
+            Binawatch_httpd::write_log("User does not exist." );
+            json_response["statusmsg"] = "User does not exist.";
+            json_response["statuscode"] = -2; 
+
+        } else {
+
+            string hashed_password = sha256( password.c_str() );
+            if ( hashed_password == Binawatch_db::results_set[0][1] ) {
+                // OK
+                json_response["statusmsg"] = "OK";
+                json_response["statuscode"] = 0; 
+
+            } else {
+                json_response["statusmsg"] = "Authentication Failed!";
+                json_response["statuscode"] = -3; 
+            }
+
+        }
+    } else {
+
+        json_response["statusmsg"] = "Username and Password cannot be empty.";
+        json_response["statuscode"] = -1; 
+        
+    }
+
+    Json::FastWriter fastWriter;
+    str_response = fastWriter.write(json_response) ;
 
 }

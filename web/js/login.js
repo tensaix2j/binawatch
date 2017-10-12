@@ -1,6 +1,6 @@
 
 
-function Register() {
+function Login() {
 
 	//-----------
 	this.submit = function() {
@@ -10,28 +10,29 @@ function Register() {
 			password : $("#txtPassword").val()
 		}
 
-		$.getJSON( "/register.json", params, function(response,status) {
+		$.getJSON( "/login.json", params, function(response,status) {
 
 			if ( response["statuscode"] == 0 ) {
-			
+				
 				$.toaster({ 
-						priority : 'success', 
-						message :"Register successfully"  
+					priority : 'success', 
+					message :"Login successfully"  
 				});
 				setTimeout( function() {
-					window.location.href = "/login.html";
+					window.location.href = "/";
 				}, 800);
-				
 
+				
 			} else {
 				$.toaster({ 
 						priority : 'danger', 
-						message :"Failed to register. " + response["statusmsg"]  
+						message :"Failed to login. " + response["statusmsg"]  
 				});
-				if ( response["statuscode"] == -2 ) {
+				if ( response["statuscode"] < 0 ) {
 					$("#igrpUsername").addClass("has-error"); 
 					$("#vdlUsername").html(response["statusmsg"]); 
 					$("#vdlUsername").show();
+					
 				}
 			}
 		});
@@ -43,7 +44,7 @@ function Register() {
 
 		var ret = 0;
 
-		var v_arr = ["Username", "Password", "RetypePassword"]
+		var v_arr = ["Username", "Password"]
 
 		for ( i = 0 ; i < v_arr.length ; i++ ) {
 
@@ -60,29 +61,16 @@ function Register() {
 
 			}
 		}
-		if ( ret == 0 ) {
-			if ( $("#txtPassword").val() != $("#txtRetypePassword").val() ) {
-				$("#igrpRetypePassword").addClass("has-error");
-				$("#vdlRetypePassword").html("Repeat Password does not match the password!");
-				$("#vdlRetypePassword").show();
-				ret = -1;
-			}
-		}
 		return ret;
 	}
 
 	//--------------------
 	this.init = function() {
 
-		var rg = this;
-		$("#chkAgree").click ( function(ev) {
-			$("#butSignup").attr("disabled",!this.checked);
-		});
-
-		$('#butSignup').click( function(ev) {
-			
-			if ( rg.validate() == 0 ) {
-				rg.submit();
+		var lgn = this;
+		$('#butLogin').click( function(ev) {
+			if ( lgn.validate() == 0 ) {
+				lgn.submit();
 			}
 		});
 	}
@@ -90,7 +78,7 @@ function Register() {
 }
 
 $(document).ready(function(){
-	rg = new Register();
-	rg.init();
+	lgn = new Login();
+	lgn.init();
 });
 

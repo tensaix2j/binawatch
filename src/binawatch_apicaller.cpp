@@ -50,6 +50,7 @@ Binawatch_apicaller::get_allBookTickers()
 					shared_data->bidQty[symbol] 	= bidQty;
 		 			shared_data->askPrice[symbol] 	= askPrice;
 		 			shared_data->askQty[symbol] 	= askQty;
+		 			shared_data->last_query_time    = get_current_epoch();
 		 		}
 	 		}
 	    } catch ( exception &e ) {

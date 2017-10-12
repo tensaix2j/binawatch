@@ -15,7 +15,7 @@ using namespace std;
 
 void split_string( string &s, char delim, vector <string> &result);
 bool replace_string( string& str, const char *from, const char *to);
-bool replace_string_once( string& str, const char *from, const char *to);
+int replace_string_once( string& str, const char *from, const char *to , int offset);
 
 
 string b2a_hex( char *byte_arr, int n );

@@ -25,6 +25,8 @@ class Binawatch_webservices {
 		static void get_allBookTickers( string &str_response );
 		static void get_account( string &str_response );
 		static void register_account( string &str_response, string &username , string &password ) ;
+		static void login_account(string &str_response, string &username , string &password );
+		
 };
 
 

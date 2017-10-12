@@ -275,6 +275,11 @@ Binawatch_httpd::answer_to_connection(
 
         sprintf( mime_type, "image/png" );
         is_static_resource = 1;    
+
+    } else if ( fnmatch("/*.woff*", url , FNM_LEADING_DIR ) == 0  ) {
+
+        sprintf( mime_type, "application/font-woff" );
+        is_static_resource = 1;
     
     } else if ( fnmatch("/*.svg", url , FNM_LEADING_DIR ) == 0  ) {
 

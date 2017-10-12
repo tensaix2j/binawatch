@@ -26,7 +26,6 @@ Binawatch_db::exec_sql_cb (
 
 	for (i = 0; i < argc; i++ ){
     	//Binawatch_httpd::write_log("%s = %s", azColName[i], argv[i] ? argv[i] : "NULL");
-		
 		string val = argv[i]? string(argv[i]) : "";
 		row.push_back( val );
    	}
@@ -45,7 +44,6 @@ Binawatch_db::sanitize_arg( string &raw_arg) {
 	
 	// Do not allow arg too long
 	if ( raw_arg.length() > 1024 ) {
-		// Why need such as long arg?
 		raw_arg = raw_arg.substr(0,1024);
 	}
 
@@ -68,6 +66,7 @@ Binawatch_db::exec_sql( const char* sql_fmt , vector <string> &sql_args )
 {
 	int i;
 	char *zErrMsg = 0;
+	int offset = 0;
 
 	string final_sql = string(sql_fmt);
 	for ( i = 0 ; i < sql_args.size() ; i++ ) {
@@ -76,8 +75,8 @@ Binawatch_db::exec_sql( const char* sql_fmt , vector <string> &sql_args )
 		replacement.append( sanitize_arg( sql_args[i] ) );
 		replacement.append("'");
 
-		bool b = replace_string_once( final_sql , "?", replacement.c_str() );
-		if ( b == false ) {
+		offset = replace_string_once( final_sql , "?", replacement.c_str() , offset );
+		if ( offset == 0 ) {
 			break;
 		}
 	}

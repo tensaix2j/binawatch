@@ -11,7 +11,7 @@ struct Binawatch_shared_data* Binawatch_webservices::shared_data = NULL;
 
 //-----------------
 int 
-Binawatch_webservices::url_router( struct MHD_Connection *connection, const char* url , string &str_response ) {
+Binawatch_webservices::url_router( struct MHD_Connection *connection, string &str_session_id, const char* url , string &str_response ) {
 
     if ( strcmp( url , "/allBookTickers.json" ) == 0 ) {
         
@@ -40,7 +40,7 @@ Binawatch_webservices::url_router( struct MHD_Connection *connection, const char
         username = cstr_username? string(cstr_username ) : "";
         password = cstr_password? string(cstr_password ) : "";
         
-        Binawatch_webservices::login_account(str_response, username, password );
+        Binawatch_webservices::login_account(str_response, str_session_id,  username, password );
         
 
     } else {
@@ -121,15 +121,17 @@ Binawatch_webservices::register_account( string &str_response, string &username 
         Binawatch_db::exec_sql("select * from tbl_users where username = ?", sql_args );
         if ( Binawatch_db::results_set.size() == 0 ) {
             
-            Binawatch_httpd::write_log("OK to register. Let's go aheard" );
             
             string hashed_password = sha256( password.c_str() );
             sql_args.push_back( hashed_password );
 
             int ret = Binawatch_db::exec_sql("insert into tbl_users(username,hashed_password) values( ?, ? )", sql_args );
             if ( ret == 0 ) {
+                
                 json_response["statusmsg"] = "OK";
                 json_response["statuscode"] = 0; 
+                Binawatch_httpd::write_log("Register OK!" );
+
             } else {
                 json_response["statusmsg"] = "Some error on our server code. We'll fix it a.s.a.p";
                 json_response["statuscode"] = -1; 
@@ -156,7 +158,7 @@ Binawatch_webservices::register_account( string &str_response, string &username 
 
 //---------------
 void 
-Binawatch_webservices::login_account( string &str_response, string &username , string &password ) 
+Binawatch_webservices::login_account( string &str_response, string &str_session_id,  string &username , string &password ) 
 {
     Binawatch_httpd::write_log("<Binawatch_webservices::login_account> username = %s, password = %s" , username.c_str(), password.c_str() );
     
@@ -181,7 +183,9 @@ Binawatch_webservices::login_account( string &str_response, string &username , s
                 // OK
                 json_response["statusmsg"] = "OK";
                 json_response["statuscode"] = 0; 
-
+                Binawatch_httpd::write_log("Login OK!" );
+                Binawatch_httpd::add_login_user( str_session_id, username );
+                
             } else {
                 json_response["statusmsg"] = "Authentication Failed!";
                 json_response["statuscode"] = -3; 

@@ -35,7 +35,14 @@ struct request {
 	string task;
 };
 
+//------------------
+struct login_user {
 
+	string username;
+	string api_key;
+	string secret_key;
+	time_t 	expiry_time;
+};
 
 
 
@@ -43,6 +50,8 @@ struct request {
 class Binawatch_httpd {
 
 	static map 		< string, time_t > sessions_registered;
+	static map 		< string, struct login_user >   sessions_login_users;
+	
 	static vector 	< struct request > request_queue;
 
 	public:
@@ -85,6 +94,8 @@ class Binawatch_httpd {
 		static bool has_pending_request();
 		static void process_request_queue();
 
+		static void add_login_user( string &str_session_id, string &username );
+		
 		static int init( int port );
 		static int stop();
 

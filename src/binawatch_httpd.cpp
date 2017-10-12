@@ -4,11 +4,13 @@
 #include "binawatch_utils.h"
 #include "binawatch_apicaller.h"
 #include "binawatch_webservices.h"
+#include "binawatch_db.h"
 
 
 struct MHD_Daemon * Binawatch_httpd::daemon = NULL;
 map    < string, time_t > Binawatch_httpd::sessions_registered;
 vector < struct request > Binawatch_httpd::request_queue;
+map    < string, struct login_user >   Binawatch_httpd::sessions_login_users;
 
 
 //-------------------------------------------------
@@ -108,7 +110,32 @@ Binawatch_httpd::expiring_sessions()
 
 
 
+//-------------
+void 
+Binawatch_httpd::add_login_user( string &str_session_id, string &username ) 
+{       
+    write_log("Binawatch_httpd::add_login_user : %s", username.c_str() );
+        
+    Binawatch_db::results_set.clear();
+    vector <string> sql_args;
+    sql_args.push_back( username );
 
+    Binawatch_db::exec_sql("select username, api_key, secret_key from tbl_users where username = ?", sql_args );
+        
+    if ( Binawatch_db::results_set.size() > 0 ) {    
+        
+        struct login_user new_user;
+        
+        new_user.username    = username;
+        new_user.api_key     = Binawatch_db::results_set[0][1];
+        new_user.secret_key  = Binawatch_db::results_set[0][2];
+        new_user.expiry_time = get_current_epoch() + 3600;
+
+        write_log("Binawatch_httpd::add_login_user: %s OK", username.c_str() );
+        sessions_login_users[ str_session_id ] = new_user;
+    }
+
+}
 
 
 
@@ -206,8 +233,8 @@ Binawatch_httpd::response_with_web_service(
     string str_session_id = get_session( connection );
 
 
-    Binawatch_webservices::url_router( connection,  url , str_response);
-        
+    Binawatch_webservices::url_router( connection, str_session_id,  url , str_response);
+            
     // Response now...
     response = MHD_create_response_from_buffer ( str_response.size() , (void *)( str_response.c_str() ) , MHD_RESPMEM_PERSISTENT);
     // set response header session ID

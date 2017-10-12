@@ -8,7 +8,7 @@ body {
 	padding: 0;
   	list-style-type: none;
   	background-color: #fff;
-  	width:450px;
+  	width:100%;
   	margin: auto;
 }
 
@@ -32,4 +32,8 @@ body {
 
 .vdl { 
 	display: none;
+}
+
+#a_signup {
+	margin-left: 20px;
 }

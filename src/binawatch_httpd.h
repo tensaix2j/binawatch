@@ -26,6 +26,8 @@
 using namespace std;
 
 
+
+
 //---------------------------------
 struct request { 
 	struct MHD_Connection *connection;
@@ -44,6 +46,7 @@ struct login_user {
 	time_t 	expiry_time;
 };
 
+#define INDEX_PAGE "/binawatch.html"
 
 
 //-----------------------------
@@ -74,19 +77,29 @@ class Binawatch_httpd {
 		static int log_http_header ( void *cls, enum MHD_ValueKind kind, const char *key, const char *value );
 
 		static int response_with_errormsg( struct MHD_Connection *connection, MHD_Response *response, int errorcode, const char *error_msg  );
+
 		static int response_with_static_resource( 
 	        struct MHD_Connection *connection, 
 	        MHD_Response *response,
 	        char* mime_type,
-	        const char *url,
-	        struct stat *sbuf
+	        string &url
 	    ) ;
 
 		static int response_with_web_service( 
 		    struct MHD_Connection *connection, 
 		    MHD_Response *response,
-		    const char *url
+		    char *mime_type,
+		    string &url
 		); 
+
+
+		static int html_routing( 
+			struct MHD_Connection *connection, 
+	        MHD_Response *response,
+	        char* mime_type,
+	        string &url, 
+	        string &str_session_id 
+	    ) ;
 
 		static string get_session( struct MHD_Connection *connection );
 		static string generate_new_session();
@@ -105,6 +118,8 @@ class Binawatch_httpd {
 		    struct MHD_Connection *connection, 
 		    MHD_Response *response
 		);
+
+		static struct login_user *get_session_user( string &str_session_id );
 
 };
 

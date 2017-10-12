@@ -3,15 +3,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Binance Watcher</title>
+	<title>Binawatch</title>
 	<meta name="apple-mobile-web-app-title" content="Cryptotickers">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="mobile-web-app-capable" content="yes">
 	
 	<link rel="stylesheet" href="/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="/css/navbar.css" />
 	<link rel="stylesheet" href="/css/register.css" />
 		
 	<script src="/js/jquery-1.12.4.min.js"></script>
+	<script src="/js/bootstrap.min.js"></script>
 	<script src="/js/jquery.toaster.js"></script>
 	<script src="/js/sprintf-0.7-beta1.js"></script>
 	<script src="/js/utils.js"></script>
@@ -19,35 +21,76 @@
 </head>
 
 <body>
-	<ul id="threadindex_list" class="threadindex_list">	
-		
-		<li><div class='title'>Login</div></li>
-		
-		<li>
-			<div class="input-group" id="igrpUsername">
-      			<span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-     			<input id="txtUsername" type="text" class="form-control" name="txtUsername" placeholder="Email">
-     		</div>
-			<label id="vdlUsername" class="vdl"></label>
-    	</li>
-		
-		<li>
-			<div class="input-group"  id="igrpPassword">
-		      <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
-		      <input id="txtPassword" type="password" class="form-control" name="txtPassword" placeholder="Password">
-		    </div>
-		    <label id="vdlPassword" class="vdl"></label>
-		    
-		</li>
 
-		<li>
-			<div>
-				<button id='butLogin' class="btn btn-default">Login</button>
-			</div>
-		</li>
-	</ul>
+	<div class="container">
+	  <nav class="navbar navbar-default">
+	    <div class="container-fluid">
+	      
+	      <div class="navbar-header">
+
+	      	<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar1">
+	          <span class="sr-only">Toggle navigation</span>
+	          <span class="icon-bar"></span>
+	          <span class="icon-bar"></span>
+	          <span class="icon-bar"></span>
+	        </button>
+
+	        <a class="navbar-brand">
+	        	<img src="/img/binawatch.svg" alt="Binawatch">
+	        </a>
+	      </div>
+
+	      <div id="navbar1" class="navbar-collapse collapse">
+	        <ul class="nav navbar-nav">
+	          <li class="active"><a href="/register.html">Sign Up</a></li>
+	        </ul>
+	      </div>
+
+
+
+	    </div>
+	    
+	    <!--/.container-fluid -->
+		   <ul id="threadindex_list" class="threadindex_list">	
+			
+			<li><div class='title'>Login</div></li>
+			
+			<li>
+				<div class="input-group" id="igrpUsername">
+	      			<span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+	     			<input id="txtUsername" type="text" class="form-control" name="txtUsername" placeholder="Email">
+	     		</div>
+				<label id="vdlUsername" class="vdl"></label>
+	    	</li>
+			
+			<li>
+				<div class="input-group"  id="igrpPassword">
+			      <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+			      <input id="txtPassword" type="password" class="form-control" name="txtPassword" placeholder="Password">
+			    </div>
+			    <label id="vdlPassword" class="vdl"></label>
+			    
+			</li>
+
+			<li>
+				<div>
+					<button id='butLogin' class="btn btn-default">Login</button>
+				</div>
+			</li>
+		</ul>
+
+
+	  </nav>
+	</div>
+
+
+
+	
 
 </body>
+
+
+
 
 
 

@@ -138,6 +138,19 @@ Binawatch_httpd::add_login_user( string &str_session_id, string &username )
 }
 
 
+//--------------
+struct login_user *
+Binawatch_httpd::get_session_user( string &str_session_id ) {
+
+    if ( sessions_login_users.find( str_session_id ) != sessions_login_users.end() ) {
+
+        return &sessions_login_users[ str_session_id ];
+    } else {
+        return NULL;
+    }
+}
+
+
 
 
 
@@ -183,18 +196,19 @@ Binawatch_httpd::response_with_static_resource(
         struct MHD_Connection *connection, 
         MHD_Response *response,
         char* mime_type,
-        const char *url,
-        struct stat *sbuf
+        string &url
     ) 
 {
 
     int fd;
     int ret;
+    struct stat sbuf;
+
+    string full_path;
+    full_path.append( "../web");
+    full_path.append( url );
     
-    char full_path[1024];
-    sprintf( full_path , "../web%s", url );
-    
-    if ( (-1 == (fd = open ( full_path , O_RDONLY))) || (0 != fstat (fd, sbuf)) ) {
+    if ( (-1 == (fd = open ( full_path.c_str() , O_RDONLY))) || (0 != fstat (fd, &sbuf)) ) {
         if (fd != -1) {
             (void) close (fd);
         }
@@ -202,10 +216,10 @@ Binawatch_httpd::response_with_static_resource(
     }
 
 
-    write_log("<Binawatch_httpd::answer_to_connection> Ready to serve %s", full_path );
+    write_log("<Binawatch_httpd::answer_to_connection> Ready to serve %s", full_path.c_str() );
 
 
-    response = MHD_create_response_from_fd_at_offset64 (sbuf->st_size, fd, 0);
+    response = MHD_create_response_from_fd_at_offset64 (sbuf.st_size, fd, 0);
     MHD_add_response_header (response, "Content-Type", mime_type);
     ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
@@ -224,33 +238,93 @@ Binawatch_httpd::response_with_web_service(
 
         struct MHD_Connection *connection, 
         MHD_Response *response,
-        const char *url
+        char* mime_type,
+        string &url
     ) 
 {
 
     int ret;
     string str_response;
     string str_session_id = get_session( connection );
-
-
-    Binawatch_webservices::url_router( connection, str_session_id,  url , str_response);
-            
-    // Response now...
-    response = MHD_create_response_from_buffer ( str_response.size() , (void *)( str_response.c_str() ) , MHD_RESPMEM_PERSISTENT);
-    // set response header session ID
-    string cookie_kv = "session=";
-    cookie_kv.append( str_session_id );
-    MHD_add_response_header (response, MHD_HTTP_HEADER_SET_COOKIE,  cookie_kv.c_str() );
-
+    
+    if ( fnmatch("/*.html", url.c_str(), FNM_LEADING_DIR ) == 0 ) {
         
-    ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
-    MHD_destroy_response (response);
+        ret = html_routing( connection, response, mime_type, url , str_session_id );
 
+    } else {
+        
+        Binawatch_webservices::url_router( connection, str_session_id,  url , str_response);
+                
+        // Response now...
+        response = MHD_create_response_from_buffer ( str_response.size() , (void *)( str_response.c_str() ) , MHD_RESPMEM_PERSISTENT);
+        // set response header session ID
+        
+        string cookie_kv = "session=";
+        cookie_kv.append( str_session_id );
+
+        MHD_add_response_header (response, "Content-Type", mime_type);
+        MHD_add_response_header (response, MHD_HTTP_HEADER_SET_COOKIE,  cookie_kv.c_str() );
+
+            
+        ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
+        MHD_destroy_response (response);
+    
+    }
 
         
     return ret;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+//----------------
+int 
+Binawatch_httpd::html_routing( 
+
+        struct MHD_Connection *connection, 
+        MHD_Response *response,
+        char* mime_type,
+        string &url, 
+        string &str_session_id 
+    ) 
+{
+    int ret;
+
+    if ( url == "/login.html" || url == "/register.html" ) {
+            
+        struct login_user* user = get_session_user(str_session_id);
+        if ( user == NULL ) {
+            ret = response_with_static_resource( connection, response, mime_type , url );    
+        } else {
+            string redirect_url = INDEX_PAGE;
+            ret = response_with_static_resource( connection, response, mime_type , redirect_url ); 
+        }
+
+    } else if ( url == INDEX_PAGE ) {
+
+        struct login_user* user = get_session_user(str_session_id);
+        if ( user == NULL ) {
+            string redirect_url = "/login.html";
+            ret = response_with_static_resource( connection, response, mime_type , redirect_url ); 
+        } else {
+            ret = response_with_static_resource( connection, response, mime_type , url );    
+        }
+
+    } else {
+        ret = response_with_static_resource( connection, response, mime_type , url );
+    }
+    return ret;
+}
 
 
 
@@ -276,49 +350,59 @@ Binawatch_httpd::answer_to_connection(
     write_log("<Binawatch_httpd::answer_to_connection> New %s request for %s \n", method, url );
     
     struct MHD_Response *response;
-    struct stat sbuf;
     int ret;
     bool is_static_resource = 0;
     bool is_web_service     = 0;
     char mime_type[128] = "text/plain";
+    
         
 
+    // Redirection
+    string use_url = string(url);
+    if ( use_url == "/" ) {
+        use_url = INDEX_PAGE;
+        write_log("<Binawatch_httpd::answer_to_connection> Redirect New %s request to %s \n", method, use_url.c_str() );
+    
+    }
+        
+    
 
-    if ( fnmatch( "/*.css", url, FNM_LEADING_DIR ) == 0 ) {
+    if ( fnmatch( "/*.css", use_url.c_str(), FNM_LEADING_DIR ) == 0 ) {
     
         sprintf( mime_type, "text/css" );
         is_static_resource = 1;
     
-    } else if ( fnmatch("/*.html", url, FNM_LEADING_DIR ) == 0 ) {
+    } else if ( fnmatch("/*.html", use_url.c_str(), FNM_LEADING_DIR ) == 0 ) {
+        
         sprintf( mime_type, "text/html" );
-        is_static_resource = 1;
-    
-    } else if ( fnmatch("/*.js", url , FNM_LEADING_DIR ) == 0  ) {
+        is_web_service = 1;
+        
+    } else if ( fnmatch("/*.js", use_url.c_str() , FNM_LEADING_DIR ) == 0  ) {
 
         sprintf( mime_type, "text/plain" );
         is_static_resource = 1;
 
-    } else if ( fnmatch("/*.png", url , FNM_LEADING_DIR ) == 0  ) {
+    } else if ( fnmatch("/*.png", use_url.c_str() , FNM_LEADING_DIR ) == 0  ) {
 
         sprintf( mime_type, "image/png" );
         is_static_resource = 1;    
 
-    } else if ( fnmatch("/*.woff*", url , FNM_LEADING_DIR ) == 0  ) {
+    } else if ( fnmatch("/*.woff*", use_url.c_str() , FNM_LEADING_DIR ) == 0  ) {
 
         sprintf( mime_type, "application/font-woff" );
         is_static_resource = 1;
     
-    } else if ( fnmatch("/*.svg", url , FNM_LEADING_DIR ) == 0  ) {
+    } else if ( fnmatch("/*.svg", use_url.c_str() , FNM_LEADING_DIR ) == 0  ) {
 
-        sprintf( mime_type, "image/svg" );
-        is_static_resource = 1;    
+        sprintf( mime_type, "image/svg+xml" );
+        is_static_resource = 1;
 
-    } else if ( fnmatch("/*.ico", url , FNM_LEADING_DIR ) == 0  ) {
+    } else if ( fnmatch("/*.ico", use_url.c_str() , FNM_LEADING_DIR ) == 0  ) {
 
         sprintf( mime_type, "image/ico" );
         is_static_resource = 1;    
 
-    } else if ( fnmatch("/*.json", url , FNM_LEADING_DIR ) == 0 ) {
+    } else if ( fnmatch("/*.json", use_url.c_str() , FNM_LEADING_DIR ) == 0 ) {
 
         sprintf( mime_type, "text/json" );
         is_web_service = 1;
@@ -328,20 +412,14 @@ Binawatch_httpd::answer_to_connection(
 
 
 
-
     if ( is_static_resource == 1 )   {
 
-        ret = response_with_static_resource( connection,  response, mime_type, url , &sbuf) ;
+        ret = response_with_static_resource( connection, response, mime_type, use_url ) ;
     
     } else if ( is_web_service == 1 ) {
 
-        ret = response_with_web_service( connection,  response , url );
+        ret = response_with_web_service( connection,  response , mime_type,  use_url );
 
-    } else if ( strcmp( url, "/" ) == 0 ) {
-
-        sprintf( mime_type, "text/html" );
-        ret = response_with_static_resource( connection,  response, mime_type, "/binawatch.html" , &sbuf) ;
-        
     } else {
 
         ret = response_with_errormsg( connection, response, 401, "Unauthorized Request Type!" );

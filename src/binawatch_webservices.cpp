@@ -9,21 +9,35 @@
 struct Binawatch_shared_data* Binawatch_webservices::shared_data = NULL;
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 //-----------------
 int 
-Binawatch_webservices::url_router( struct MHD_Connection *connection, string &str_session_id, const char* url , string &str_response ) {
+Binawatch_webservices::url_router( struct MHD_Connection *connection, string &str_session_id, string &url , string &str_response ) {
 
-    if ( strcmp( url , "/allBookTickers.json" ) == 0 ) {
+    if ( url == "/allBookTickers.json"  ) {
         
         Binawatch_webservices::get_allBookTickers(str_response);
 
-    } else if ( strcmp( url , "/account.json" ) == 0 ) {
+    } else if ( url == "/account.json"  ) {
 
         Binawatch_webservices::get_account(str_response);
 
 
-    } else if ( strcmp( url, "/register.json") == 0 ) {
+    } else if ( url == "/register.json" ) {
 
+            
         string username, password;
         const char* cstr_username = MHD_lookup_connection_value( connection, MHD_GET_ARGUMENT_KIND, "username");
         const char* cstr_password = MHD_lookup_connection_value( connection, MHD_GET_ARGUMENT_KIND, "password");
@@ -32,7 +46,8 @@ Binawatch_webservices::url_router( struct MHD_Connection *connection, string &st
         register_account( str_response, username, password );  
     
 
-    } else if ( strcmp( url , "/login.json" ) == 0 ) {
+
+    } else if ( url == "/login.json"  ) {
 
         string username, password;
         const char* cstr_username = MHD_lookup_connection_value( connection, MHD_GET_ARGUMENT_KIND, "username");
@@ -57,6 +72,18 @@ Binawatch_webservices::url_router( struct MHD_Connection *connection, string &st
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 //---------------------------
 void
 Binawatch_webservices::get_allBookTickers( string &str_response) {
@@ -70,9 +97,7 @@ Binawatch_webservices::get_allBookTickers( string &str_response) {
         Binawatch_apicaller::get_allBookTickers();
     }
 
-    Binawatch_httpd::write_log("<Binawatch_webservices::get_allBookTickers> Ready to response.");
     
-
     map <string,double>::iterator it;
     for ( it = shared_data->bidPrice.begin(); it != shared_data->bidPrice.end(); ++it) {
             
@@ -89,7 +114,15 @@ Binawatch_webservices::get_allBookTickers( string &str_response) {
     Json::FastWriter fastWriter;
     str_response = fastWriter.write(tickers_arr) ;
     
+    //Binawatch_httpd::write_log("<Binawatch_webservices::get_allBookTickers> Ready to response. |%s| ", str_response.c_str() );
+    
+    
+
 }
+
+
+
+
 
 
 
@@ -105,11 +138,22 @@ Binawatch_webservices::get_account( string &str_response ) {
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
 //---------------
 void 
 Binawatch_webservices::register_account( string &str_response, string &username , string &password ) 
 {
-    Binawatch_httpd::write_log("<Binawatch_webservices::register_account> username = %s, password = %s" , username.c_str(), password.c_str() );
+    Binawatch_httpd::write_log("<Binawatch_webservices::register_account> username = %s, password = *** " , username.c_str() );
     
     Json::Value json_response;
     vector <string> sql_args;
@@ -154,6 +198,21 @@ Binawatch_webservices::register_account( string &str_response, string &username 
     
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 //---------------

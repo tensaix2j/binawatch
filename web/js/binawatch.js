@@ -1,16 +1,40 @@
 
 
-function SimpleList() {
+function Binawatch() {
 
 	//---------------
 	this.get_allBookTickers = function() {
 
-		var sl = this;
 		$.getJSON("/allBookTickers.json", function( response ) {
 			
-			sl.allBookTickers = response;
-            sl.render_list();
+			bnw.allBookTickers = response;
+            bnw.render_list();
             	    	
+	    });
+	}
+
+	//--------
+	this.logout = function() {
+
+		$.getJSON("/logout.json", function( response ) {
+
+			if ( response["statuscode"] == 0 ) {
+				
+				$.toaster({ 
+					priority : 'success', 
+					message :"Logout successfully"  
+				});
+				setTimeout( function() {
+					window.location.href = "/login.html";
+				}, 300);
+					
+			} else {
+				$.toaster({ 
+						priority : 'danger', 
+						message :"Failed to logout. " + response["statusmsg"] + " . Please retry."  
+				});
+			}
+
 	    });
 	}
 
@@ -53,13 +77,16 @@ function SimpleList() {
 				}
 			}
 		}	
-		
+
 		mylist.html(str);
 	}
 
 	//-------------
 	this.init = function() {
 		this.get_allBookTickers();
+		$("#a_logout").click( function() {
+			bnw.logout();
+		});
 
 	}
 
@@ -67,8 +94,8 @@ function SimpleList() {
 
 
 $(document).ready(function(){
-	sl = new SimpleList();
-	sl.init();
+	bnw = new Binawatch();
+	bnw.init();
 });
 
 	

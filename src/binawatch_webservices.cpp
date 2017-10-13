@@ -28,11 +28,11 @@ Binawatch_webservices::url_router( struct MHD_Connection *connection, string &st
 
     if ( url == "/allBookTickers.json"  ) {
         
-        Binawatch_webservices::get_allBookTickers(str_response);
+        get_allBookTickers(str_response);
 
     } else if ( url == "/account.json"  ) {
 
-        Binawatch_webservices::get_account(str_response);
+        get_account(str_response);
 
 
     } else if ( url == "/register.json" ) {
@@ -55,7 +55,28 @@ Binawatch_webservices::url_router( struct MHD_Connection *connection, string &st
         username = cstr_username? string(cstr_username ) : "";
         password = cstr_password? string(cstr_password ) : "";
         
-        Binawatch_webservices::login_account(str_response, str_session_id,  username, password );
+        login_account(str_response, str_session_id,  username, password );
+        
+
+    } else if ( url == "/logout.json" ) {
+    
+        logout_account( str_response, str_session_id );
+
+
+    } else if ( url == "/save_apikey.json" ) {
+
+        string apikey, secretkey;
+        const char* cstr_apikey     = MHD_lookup_connection_value( connection, MHD_GET_ARGUMENT_KIND, "apikey");
+        const char* cstr_secretkey  = MHD_lookup_connection_value( connection, MHD_GET_ARGUMENT_KIND, "secretkey");
+        apikey      = cstr_apikey? string(cstr_apikey ) : "";
+        secretkey   = cstr_secretkey? string(cstr_secretkey ) : "";
+        
+        save_apikey( str_response, str_session_id, apikey, secretkey ); 
+
+
+     } else if ( url == "/get_apikey.json" ) {
+        
+        get_apikey( str_response, str_session_id ); 
         
 
     } else {
@@ -114,7 +135,7 @@ Binawatch_webservices::get_allBookTickers( string &str_response) {
     Json::FastWriter fastWriter;
     str_response = fastWriter.write(tickers_arr) ;
     
-    //Binawatch_httpd::write_log("<Binawatch_webservices::get_allBookTickers> Ready to response. |%s| ", str_response.c_str() );
+    Binawatch_httpd::write_log("<Binawatch_webservices::get_allBookTickers> Ready to response. |%s|... ", str_response.substr(0,100).c_str() );
     
     
 
@@ -257,6 +278,108 @@ Binawatch_webservices::login_account( string &str_response, string &str_session_
         json_response["statuscode"] = -1; 
         
     }
+
+    Json::FastWriter fastWriter;
+    str_response = fastWriter.write(json_response) ;
+
+}
+
+
+
+
+
+
+//---------------
+void 
+Binawatch_webservices::logout_account( string &str_response, string &str_session_id ) 
+{
+    Binawatch_httpd::write_log("<Binawatch_webservices::logout_account>" );
+    
+    Json::Value json_response;
+    
+    Binawatch_httpd::remove_login_user( str_session_id );
+    json_response["statusmsg"] = "OK";
+    json_response["statuscode"] = 0; 
+
+    Json::FastWriter fastWriter;
+    str_response = fastWriter.write(json_response) ;
+
+}
+
+
+
+
+
+//-------------
+void 
+Binawatch_webservices::save_apikey( string &str_response, string &str_session_id, string &apikey, string &secretkey ) {
+
+    Binawatch_httpd::write_log("<Binawatch_webservices::save_apikey>");
+    
+    Json::Value json_response;
+    vector <string> sql_args;
+
+    struct login_user *user = Binawatch_httpd::get_session_user( str_session_id );
+
+    if ( user != NULL ) {
+        
+        user->apikey = apikey; 
+        user->secretkey = secretkey;
+        sql_args.push_back( apikey );
+        sql_args.push_back( secretkey );
+        sql_args.push_back( user->username );
+        
+        int ret = Binawatch_db::exec_sql("update tbl_users set api_key = ?, secret_key = ? where username = ?", sql_args );
+        if ( ret == 0 ) {
+            json_response["statusmsg"] = "OK";
+            json_response["statuscode"] = 0; 
+        } else {
+            json_response["statusmsg"] = "Error saving api keys";
+            json_response["statuscode"] = -1; 
+        }
+    } else {
+        json_response["statusmsg"] = "User Operation FAILED";
+        json_response["statuscode"] = -5; 
+    }
+
+
+    Json::FastWriter fastWriter;
+    str_response = fastWriter.write(json_response) ;
+
+}
+
+
+
+
+
+
+
+
+
+//-------------
+void 
+Binawatch_webservices::get_apikey( string &str_response, string &str_session_id ) {
+
+    Binawatch_httpd::write_log("<Binawatch_webservices::get_apikey>");
+    
+    Json::Value json_response;
+    vector <string> sql_args;
+
+    struct login_user *user = Binawatch_httpd::get_session_user( str_session_id );
+
+    if ( user != NULL ) {
+        
+        json_response["statusmsg"] = "OK";
+        json_response["statuscode"] = 0; 
+        json_response["apikey"]    = user->apikey; 
+        json_response["secretkey"] = user->secretkey; 
+        
+        
+    } else {
+        json_response["statusmsg"] = "User Operation FAILED";
+        json_response["statuscode"] = -5; 
+    }
+
 
     Json::FastWriter fastWriter;
     str_response = fastWriter.write(json_response) ;

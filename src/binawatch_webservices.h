@@ -26,7 +26,9 @@ class Binawatch_webservices {
 		static void get_account( string &str_response );
 		static void register_account( string &str_response, string &username , string &password ) ;
 		static void login_account(string &str_response, string &str_session_id, string &username , string &password );
-
+		static void logout_account( string &str_response, string &str_session_id ); 
+		static void save_apikey( string &str_response, string &str_session_id, string &apikey, string &secretkey );
+		static void get_apikey( string &str_response, string &str_session_id );
 };
 
 

@@ -17,7 +17,7 @@
 	<script src="/js/jquery.toaster.js"></script>
 	<script src="/js/sprintf-0.7-beta1.js"></script>
 	<script src="/js/utils.js"></script>
-	<script src="/js/binawatch.js"></script>
+	<script src="/js/apikey.js"></script>
 
 </head>
 
@@ -43,12 +43,12 @@
 	      </div>
 	      <div id="navbar1" class="navbar-collapse collapse">
 	        <ul class="nav navbar-nav">
-	          <li class="active"><a href="#">Market</a></li>
+
+	          <li><a href="/binawatch.html">Market</a></li>
 	          <li><a href="#">Chart</a></li>
 	          <li class="dropdown">
 	            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Account: <span class="caret"></span></a>
 	            <ul class="dropdown-menu" role="menu">
-	              <li><a href="/apikey.html">Set API keys</a></li>
 	              <li><a href="#" id='a_logout'>Logout</a></li>
 	            </ul>
 	          </li>
@@ -57,12 +57,33 @@
 	      <!--/.nav-collapse -->
 	    </div>
 	    <!--/.container-fluid -->
-	    <ul id="threadindex_list" class="threadindex_list">	</ul>
+	    <ul id="threadindex_list" class="threadindex_list">	
+	    	<li>
+				<div class="input-group" id="igrpApikey">
+	      			<span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+	     			<input id="txtApikey" type="text" class="form-control" name="txtApikey" placeholder="API key">
+	     		</div>
+				<label id="vdlApikey" class="vdl"></label>
+	    	</li>
+			
+			<li>
+				<div class="input-group"  id="igrpSecretkey">
+			      <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+			      <input id="txtSecretkey" type="text" class="form-control" name="txtSecretkey" placeholder="Secret Key">
+			    </div>
+			    <label id="vdlSecretkey" class="vdl"></label>
+			    
+			</li>
+
+			<li>
+				<div>
+					<button id='butSave' class="btn btn-default">Save Settings</button>
+				</div>
+			</li>
+	    </ul>
 	  </nav>
 	</div>
 
-	
-	
 
 </body>
 

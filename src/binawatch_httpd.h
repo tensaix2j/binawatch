@@ -41,8 +41,8 @@ struct request {
 struct login_user {
 
 	string username;
-	string api_key;
-	string secret_key;
+	string apikey;
+	string secretkey;
 	time_t 	expiry_time;
 };
 
@@ -108,7 +108,9 @@ class Binawatch_httpd {
 		static void process_request_queue();
 
 		static void add_login_user( string &str_session_id, string &username );
-		
+		static void remove_login_user( string &str_session_id ) ;
+
+			
 		static int init( int port );
 		static int stop();
 

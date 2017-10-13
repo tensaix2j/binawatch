@@ -127,8 +127,8 @@ Binawatch_httpd::add_login_user( string &str_session_id, string &username )
         struct login_user new_user;
         
         new_user.username    = username;
-        new_user.api_key     = Binawatch_db::results_set[0][1];
-        new_user.secret_key  = Binawatch_db::results_set[0][2];
+        new_user.apikey      = Binawatch_db::results_set[0][1];
+        new_user.secretkey   = Binawatch_db::results_set[0][2];
         new_user.expiry_time = get_current_epoch() + 3600;
 
         write_log("Binawatch_httpd::add_login_user: %s OK", username.c_str() );
@@ -136,6 +136,17 @@ Binawatch_httpd::add_login_user( string &str_session_id, string &username )
     }
 
 }
+
+
+//-----------------
+void 
+Binawatch_httpd::remove_login_user( string &str_session_id ) 
+{       
+    write_log("Binawatch_httpd::remove_login_user : %s", str_session_id.c_str() );
+    sessions_login_users.erase( str_session_id );
+    
+}
+
 
 
 //--------------
@@ -261,7 +272,8 @@ Binawatch_httpd::response_with_web_service(
         
         string cookie_kv = "session=";
         cookie_kv.append( str_session_id );
-
+        cookie_kv.append( ";");
+        
         MHD_add_response_header (response, "Content-Type", mime_type);
         MHD_add_response_header (response, MHD_HTTP_HEADER_SET_COOKIE,  cookie_kv.c_str() );
 
@@ -310,13 +322,14 @@ Binawatch_httpd::html_routing(
             ret = response_with_static_resource( connection, response, mime_type , redirect_url ); 
         }
 
-    } else if ( url == INDEX_PAGE ) {
+    } else if ( url == INDEX_PAGE || url == "/apikey.html" ) {
 
         struct login_user* user = get_session_user(str_session_id);
         if ( user == NULL ) {
             string redirect_url = "/login.html";
             ret = response_with_static_resource( connection, response, mime_type , redirect_url ); 
         } else {
+            write_log("<Binawatch_httpd::html_routing> %p : %s", user, user->username.c_str() );
             ret = response_with_static_resource( connection, response, mime_type , url );    
         }
 
@@ -379,7 +392,7 @@ Binawatch_httpd::answer_to_connection(
         
     } else if ( fnmatch("/*.js", use_url.c_str() , FNM_LEADING_DIR ) == 0  ) {
 
-        sprintf( mime_type, "text/plain" );
+        sprintf( mime_type, "application/javascript" );
         is_static_resource = 1;
 
     } else if ( fnmatch("/*.png", use_url.c_str() , FNM_LEADING_DIR ) == 0  ) {
@@ -399,12 +412,12 @@ Binawatch_httpd::answer_to_connection(
 
     } else if ( fnmatch("/*.ico", use_url.c_str() , FNM_LEADING_DIR ) == 0  ) {
 
-        sprintf( mime_type, "image/ico" );
+        sprintf( mime_type, "image/x-icon" );
         is_static_resource = 1;    
 
     } else if ( fnmatch("/*.json", use_url.c_str() , FNM_LEADING_DIR ) == 0 ) {
 
-        sprintf( mime_type, "text/json" );
+        sprintf( mime_type, "application/json" );
         is_web_service = 1;
 
     }

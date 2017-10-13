@@ -32,7 +32,7 @@ Binawatch_webservices::url_router( struct MHD_Connection *connection, string &st
 
     } else if ( url == "/account.json"  ) {
 
-        get_account(str_response);
+        get_account(str_response, str_session_id );
 
 
     } else if ( url == "/register.json" ) {
@@ -111,30 +111,44 @@ Binawatch_webservices::get_allBookTickers( string &str_response) {
 
     Binawatch_httpd::write_log("<Binawatch_webservices::get_allBookTickers>");
 
-	Json::Value json_response(Json::arrayValue);
+
+    Json::Value json_response;
+	Json::Value tickers_arr(Json::arrayValue);
         
-    // This data can be shared across all users.
-    if ( get_current_epoch() - shared_data->last_query_time  > 5 ) {
-        Binawatch_apicaller::get_allBookTickers();
+    try {
+
+        // This data can be shared across all users.
+        if ( get_current_epoch() - shared_data->last_query_time  > 5 ) {
+            Binawatch_apicaller::get_allBookTickers();
+        }
+
+        map <string,string>::iterator it;
+        for ( it = shared_data->bidPrice.begin(); it != shared_data->bidPrice.end(); ++it) {
+                
+            Json::Value symbol;
+            symbol["s"]    = it->first ;
+            symbol["b"]  = it->second ;
+            symbol["bq"]    = shared_data->bidQty[it->first] ;
+            symbol["a"]  = shared_data->askPrice[it->first] ;
+            symbol["aq"]    = shared_data->askQty[it->first] ;
+            tickers_arr.append( symbol );
+
+        }
+
+        json_response["statusmsg"] = "OK";
+        json_response["statuscode"] = 0; 
+        json_response["data"] = tickers_arr;
+
+    } catch ( exception &ex ) {
+          
+        json_response["statusmsg"] = ex.what() ;
+        json_response["statuscode"] = -1; 
+
     }
 
-    
-    map <string,string>::iterator it;
-    for ( it = shared_data->bidPrice.begin(); it != shared_data->bidPrice.end(); ++it) {
-            
-        Json::Value symbol;
-        symbol["s"]    = it->first ;
-        symbol["b"]  = it->second ;
-        symbol["bq"]    = shared_data->bidQty[it->first] ;
-        symbol["a"]  = shared_data->askPrice[it->first] ;
-        symbol["aq"]    = shared_data->askQty[it->first] ;
-        json_response.append( symbol );
-
-    }
-   
     Json::FastWriter fastWriter;
     str_response = fastWriter.write(json_response) ;
-    
+        
     Binawatch_httpd::write_log("<Binawatch_webservices::get_allBookTickers> Ready to response. |%s|... ", str_response.substr(0,100).c_str() );
     
     
@@ -150,12 +164,52 @@ Binawatch_webservices::get_allBookTickers( string &str_response) {
 
 //---------------------------
 void
-Binawatch_webservices::get_account( string &str_response ) {
+Binawatch_webservices::get_account( string &str_response , string &str_session_id ) {
 
-    Binawatch_apicaller::get_account(
-        "w5mAgtyqd7NWoQVle0UbA56lb0ZpYkBtCUBcuNlgGa5Jn7wznU22ea8IWkWIxKxu",
-        "NIteeFjxCrbYWIEXOa6FTSIQrWeJOoXG1fUaU7sgT2SGjlp2iFoyXUr7hbmQouBp");
+    
+    Binawatch_httpd::write_log("<Binawatch_webservices::get_account>");
+    
+    Json::Value json_response;
+    vector <string> sql_args;
+
+    struct login_user *user = Binawatch_httpd::get_session_user( str_session_id );
+
+    if ( user != NULL ) {
         
+        try {
+            string str_result;
+            Binawatch_apicaller::get_account(  user->apikey.c_str() , user->secretkey.c_str() , str_result);
+            
+            Json::Reader reader;
+            Json::Value obj;
+            reader.parse( str_result , obj);
+
+            int code    = obj["code"].asInt();
+            string msg  = obj["msg"].asString();
+
+            if ( code == 0 ) {
+                json_response["statuscode"] = 0;
+                json_response["statusmsg"] = "OK";
+                json_response["data"] = obj;
+               
+            } else { 
+                json_response["statuscode"] = code; 
+                json_response["statusmsg"]  = msg ;
+            }
+
+        } catch ( exception &ex ) {
+          
+            json_response["statusmsg"] = ex.what() ;
+            json_response["statuscode"] = -1; 
+        }      
+
+    } else {
+        json_response["statusmsg"] = "User Operation FAILED";
+        json_response["statuscode"] = -5; 
+    }
+
+    Json::FastWriter fastWriter;
+    str_response = fastWriter.write(json_response) ;    
 }
 
 

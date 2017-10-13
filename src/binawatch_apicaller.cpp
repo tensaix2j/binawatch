@@ -82,7 +82,7 @@ timestamp	LONG	YES
 
 
 void 
-Binawatch_apicaller::get_account( const char* api_key, const char *secret_key ) 
+Binawatch_apicaller::get_account( const char* api_key, const char *secret_key , string &str_result ) 
 {	
 
 	write_log( "<Binawatch_apicaller::get_account>" ) ;
@@ -105,21 +105,7 @@ Binawatch_apicaller::get_account( const char* api_key, const char *secret_key )
 
 	write_log( "<Binawatch_apicaller::get_account> url = |%s|" , url.c_str() ) ;
 	
-	string result_json;
-		
-	curl_api_with_header( url, result_json , extra_http_header ) ;
-
-	if ( result_json.size() > 0 ) {
-		
-		write_log( "<Binawatch_apicaller::get_account> %s." , result_json.c_str() ) ;
-	
-		
-		write_log( "<Binawatch_apicaller::get_account> Done." ) ;
-	
-	} else {
-		write_log( "<Binawatch_apicaller::get_account> Failed to get anything." ) ;
-	}
-
+	curl_api_with_header( url, str_result , extra_http_header ) ;
 
 }
 
@@ -201,7 +187,7 @@ Binawatch_apicaller::curl_api( string &url, string &result_json ) {
 //--------------------
 // Do the curl
 void 
-Binawatch_apicaller::curl_api_with_header( string &url, string &result_json, vector <string> &extra_http_header ) 
+Binawatch_apicaller::curl_api_with_header( string &url, string &str_result, vector <string> &extra_http_header ) 
 {
 	write_log( "<Binawatch_apicaller::curl_api>" ) ;
 
@@ -216,7 +202,7 @@ Binawatch_apicaller::curl_api_with_header( string &url, string &result_json, vec
 
 		curl_easy_setopt(curl, CURLOPT_URL, url.c_str() );
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, Binawatch_apicaller::curl_cb);
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &result_json );
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &str_result );
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
 
 		if ( extra_http_header.size() > 0 ) {

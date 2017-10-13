@@ -36,8 +36,8 @@ class Binawatch_apicaller {
 				
 		static size_t curl_cb( void *content, size_t size, size_t nmemb, string *buffer ) ;
 		static void get_allBookTickers();
-		static void get_account(  const char* api_key, const char *secret_key );
-
+		static void get_account(  const char* api_key, const char *secret_key , string &str_result);
+		
 };
 
 

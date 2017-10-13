@@ -7,11 +7,35 @@ function Binawatch() {
 
 		$.getJSON("/allBookTickers.json", function( response ) {
 			
-			bnw.allBookTickers = response;
-            bnw.render_list();
+			if ( response["statuscode"] == 0 ) {
+				bnw.allBookTickers = response["data"];
+            	bnw.render_list();
+            	bnw.get_account();
+
+        	} else {
+        		console.log( response );
+        	}
             	    	
 	    });
 	}
+
+
+	//------------
+	this.get_account = function() {
+
+		$.getJSON("/account.json", function( response ) {
+			if ( response["statuscode"] == 0 ) {
+				bnw.account = response;
+            } else {
+            	$.toaster({ 
+						priority : 'danger', 
+						message :"Error to get account. " + response["statusmsg"]  
+				});
+            }	    			
+	    });	
+	}
+
+
 
 	//--------
 	this.logout = function() {

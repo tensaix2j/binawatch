@@ -32,16 +32,15 @@ Binawatch_apicaller::get_allBookTickers()
 	    	
 	    	reader.parse( result_json , obj);
 	    	
-	    	string symbol;
-		    double bidPrice, askPrice, bidQty, askQty;
-
+	    	string symbol, bidPrice, askPrice, bidQty, askQty;
+	    	
 	    	for (int i = 0; i < obj.size(); i++){
 
 	    		symbol 		= obj[i]["symbol"].asString();
-	    		bidPrice    = atof( obj[i]["bidPrice"].asString().c_str() );
-	        	bidQty      = atof( obj[i]["bidQty"].asString().c_str() );
-	        	askPrice    = atof ( obj[i]["askPrice"].asString().c_str() );
-	        	askQty      = atof( obj[i]["askQty"].asString().c_str() );
+	    		bidPrice    = obj[i]["bidPrice"].asString();
+	        	bidQty      = obj[i]["bidQty"].asString();
+	        	askPrice    = obj[i]["askPrice"].asString();
+	        	askQty      = obj[i]["askQty"].asString();
 	        	
 	        	
         		if ( shared_data ) {

@@ -111,7 +111,7 @@ Binawatch_webservices::get_allBookTickers( string &str_response) {
 
     Binawatch_httpd::write_log("<Binawatch_webservices::get_allBookTickers>");
 
-	Json::Value tickers_arr(Json::arrayValue);
+	Json::Value json_response(Json::arrayValue);
         
     // This data can be shared across all users.
     if ( get_current_epoch() - shared_data->last_query_time  > 5 ) {
@@ -119,21 +119,21 @@ Binawatch_webservices::get_allBookTickers( string &str_response) {
     }
 
     
-    map <string,double>::iterator it;
+    map <string,string>::iterator it;
     for ( it = shared_data->bidPrice.begin(); it != shared_data->bidPrice.end(); ++it) {
             
         Json::Value symbol;
-        symbol["symbol"]    = it->first ;
-        symbol["bidPrice"]  = it->second ;
-        symbol["bidQty"]    = shared_data->bidQty[it->first] ;
-        symbol["askPrice"]  = shared_data->askPrice[it->first] ;
-        symbol["askQty"]    = shared_data->askQty[it->first] ;
-        tickers_arr.append( symbol );
+        symbol["s"]    = it->first ;
+        symbol["b"]  = it->second ;
+        symbol["bq"]    = shared_data->bidQty[it->first] ;
+        symbol["a"]  = shared_data->askPrice[it->first] ;
+        symbol["aq"]    = shared_data->askQty[it->first] ;
+        json_response.append( symbol );
 
     }
    
     Json::FastWriter fastWriter;
-    str_response = fastWriter.write(tickers_arr) ;
+    str_response = fastWriter.write(json_response) ;
     
     Binawatch_httpd::write_log("<Binawatch_webservices::get_allBookTickers> Ready to response. |%s|... ", str_response.substr(0,100).c_str() );
     

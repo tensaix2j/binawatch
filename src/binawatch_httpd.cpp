@@ -265,15 +265,15 @@ Binawatch_httpd::response_with_web_service(
     } else {
         
         Binawatch_webservices::url_router( connection, str_session_id,  url , str_response);
-                
+        
         // Response now...
-        response = MHD_create_response_from_buffer ( str_response.size() , (void *)( str_response.c_str() ) , MHD_RESPMEM_PERSISTENT);
+        response = MHD_create_response_from_buffer ( str_response.size() , (void *)( str_response.c_str() ) , MHD_RESPMEM_MUST_COPY);
         // set response header session ID
         
         string cookie_kv = "session=";
         cookie_kv.append( str_session_id );
         cookie_kv.append( ";");
-        
+
         MHD_add_response_header (response, "Content-Type", mime_type);
         MHD_add_response_header (response, MHD_HTTP_HEADER_SET_COOKIE,  cookie_kv.c_str() );
 

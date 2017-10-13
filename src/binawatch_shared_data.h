@@ -9,10 +9,10 @@ using namespace std;
 
 struct Binawatch_shared_data {
 
-	map <string,double> 	bidPrice;
-	map <string,double> 	askPrice;
-	map <string,double> 	bidQty;
-	map <string,double> 	askQty;
+	map <string,string> 	bidPrice;
+	map <string,string> 	askPrice;
+	map <string,string> 	bidQty;
+	map <string,string> 	askQty;
 	time_t 					last_query_time;
 
 };

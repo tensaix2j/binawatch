@@ -50,25 +50,20 @@ function Binawatch() {
 
 			for ( var i = 0 ; i < data.length ; i++ ) {
 
-				if (  data[i]["bidPrice"] > 0.0 ) {
+				if (  parseFloat( data[i]["b"] ) > 0.0 ) {
 
 					str += "<li>";
 
-						var symbol 		= data[i]["symbol"];
+						var symbol 		= data[i]["s"];
 						var base_curr   = symbol.slice(-3);
-						var pts 		= 8;
-
-						if ( base_curr != "BTC" && base_curr != "ETH" ) {
-							pts = 2;
-						}
 						
 						str += "<div class='curr_rate_header'>"
 							str += sprintf( "<div class='curr_rate_symbol'>%s</div>", symbol );
 
 						str += "</div>"
 						str += "<div class='curr_rate'>";
-							str += sprintf("<div class='curr_rate_inner'>%s</div>", data[i]["bidPrice"].toFixed(pts) );
-							str += sprintf("<div class='curr_rate_inner'>%s</div>", data[i]["askPrice"].toFixed(pts) );
+							str += sprintf("<div class='curr_rate_inner'>%s</div>", data[i]["b"] );
+							str += sprintf("<div class='curr_rate_inner'>%s</div>", data[i]["a"] );
 							
 						str += "</div>";
 						

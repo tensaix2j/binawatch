@@ -33,31 +33,32 @@ Binawatch_apicaller::get_allBookTickers()
 		
 		try {
 			Json::Reader reader;
-	    	Json::Value obj;
+	    		Json::Value obj;
 	    	
-	    	reader.parse( result_json , obj);
+	    		reader.parse( result_json , obj);
 	    	
-	    	string symbol, bidPrice, askPrice, bidQty, askQty;
+	    		string symbol, bidPrice, askPrice, bidQty, askQty;
 	    	
-	    	for (int i = 0; i < obj.size(); i++){
+	    		for (int i = 0; i < obj.size(); i++){
 
-	    		symbol 		= obj[i]["symbol"].asString();
-	    		bidPrice    = obj[i]["bidPrice"].asString();
-	        	bidQty      = obj[i]["bidQty"].asString();
-	        	askPrice    = obj[i]["askPrice"].asString();
-	        	askQty      = obj[i]["askQty"].asString();
+	    			symbol		= obj[i]["symbol"].asString();
+	    			bidPrice	= obj[i]["bidPrice"].asString();
+	        		bidQty		= obj[i]["bidQty"].asString();
+	        		askPrice	= obj[i]["askPrice"].asString();
+	        		askQty		= obj[i]["askQty"].asString();
 	        	
 	        	
-        		if ( shared_data ) {
+	        		if ( shared_data ) {
 
-        			shared_data->bidPrice[symbol] 	= bidPrice;
+	        			shared_data->bidPrice[symbol] 	= bidPrice;
 					shared_data->bidQty[symbol] 	= bidQty;
-		 			shared_data->askPrice[symbol] 	= askPrice;
-		 			shared_data->askQty[symbol] 	= askQty;
-		 			shared_data->last_query_time    = get_current_epoch();
-		 		}
-	 		}
-	    } catch ( exception &e ) {
+			 		shared_data->askPrice[symbol] 	= askPrice;
+			 		shared_data->askQty[symbol] 	= askQty;
+			 		shared_data->last_query_time    = get_current_epoch();
+			 	}
+		 	}
+
+		} catch ( exception &e ) {
 		 	Binawatch_logger::write_log( "<Binawatch_apicaller::get_allBookTickers> Error ! %s", e.what() ); 
 		}   
 		Binawatch_logger::write_log( "<Binawatch_apicaller::get_allBookTickers> Done." ) ;
@@ -65,9 +66,8 @@ Binawatch_apicaller::get_allBookTickers()
 	} else {
 		Binawatch_logger::write_log( "<Binawatch_apicaller::get_allBookTickers> Failed to get anything." ) ;
 	}
-
-
 }
+
 
 
 
@@ -133,23 +133,20 @@ Binawatch_apicaller::curl_cb( void *content, size_t size, size_t nmemb, std::str
 	Binawatch_logger::write_log( "<Binawatch_apicaller::curl_cb> " ) ;
 
 	size_t newLength = size*nmemb;
-    size_t oldLength = buffer->size();
-    try
-    {
-        buffer->resize(oldLength + newLength);
-    }
-    catch(std::bad_alloc &e)
-    {
-        //handle memory problem
-        return 0;
-    }
+	size_t oldLength = buffer->size();
+	try {
+		buffer->resize(oldLength + newLength);
+	
+	} catch(std::bad_alloc &e) {
+		//handle memory problem
+		return 0;
+	}
 
-    std::copy((char*)content,(char*)content + newLength,buffer->begin()+oldLength);
-
-    Binawatch_logger::write_log( "<Binawatch_apicaller::curl_cb> done" ) ;
-
-    return size*nmemb;
+	std::copy((char*)content,(char*)content + newLength,buffer->begin()+oldLength);
+	Binawatch_logger::write_log( "<Binawatch_apicaller::curl_cb> done" ) ;
+	return size*nmemb;
 }
+
 
 
 

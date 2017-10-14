@@ -75,7 +75,7 @@ Binawatch_webservices::url_router( struct MHD_Connection *connection, string &st
         save_apikey( str_response, str_session_id, apikey, secretkey ); 
 
 
-     } else if ( url == "/get_apikey.json" ) {
+    } else if ( url == "/get_apikey.json" ) {
         
         get_apikey( str_response, str_session_id ); 
         

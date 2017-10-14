@@ -26,7 +26,7 @@ Binawatch_db::exec_sql_cb (
 	vector <string> row;
 
 	for (i = 0; i < argc; i++ ){
-    	//Binawatch_logger::write_log("%s = %s", azColName[i], argv[i] ? argv[i] : "NULL");
+    		//Binawatch_logger::write_log("%s = %s", azColName[i], argv[i] ? argv[i] : "NULL");
 		string val = argv[i]? string(argv[i]) : "";
 		row.push_back( val );
    	}
@@ -82,12 +82,12 @@ Binawatch_db::exec_sql( const char* sql_fmt , vector <string> &sql_args )
 		}
 	}
 
-    Binawatch_logger::write_log( "<Binawatch_db::exec_sql> %s\n", final_sql.c_str() );
-	
-    results_set.clear();
-    int rc = sqlite3_exec(db, final_sql.c_str() , Binawatch_db::exec_sql_cb , 0, &zErrMsg);
-   	
-	if( rc != SQLITE_OK ){
+	Binawatch_logger::write_log( "<Binawatch_db::exec_sql> %s\n", final_sql.c_str() );
+
+	results_set.clear();
+	int rc = sqlite3_exec(db, final_sql.c_str() , Binawatch_db::exec_sql_cb , 0, &zErrMsg);
+		
+	if ( rc != SQLITE_OK ) {
 		Binawatch_logger::write_log("<Binawatch_db::exec_sql> SQL error: %s\n", zErrMsg);
 		sqlite3_free(zErrMsg);
 		return -1;

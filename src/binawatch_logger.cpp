@@ -71,7 +71,7 @@ Binawatch_logger::write_log_clean( const char *fmt, ... )
         fflush(stdout);
     }
     va_end (arg);
-    
+
 }
 
 
@@ -84,13 +84,14 @@ Binawatch_logger::open_logfp_if_not_opened() {
         log_fp = fopen( debug_log_file.c_str() , "a" );
 
         if ( log_fp ) {
-            write_log("log file in %s", debug_log_file.c_str());
+            printf("log file in %s\n", debug_log_file.c_str());
         } else {
             printf("Failed to open log file.\n" );
         }
     }
 
 }
+
 
 //---------------------
 void 

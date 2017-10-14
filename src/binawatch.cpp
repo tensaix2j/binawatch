@@ -14,7 +14,7 @@
 //----------------------------------
 int main( int argc , char *argv[] ) {
 
-	Binawatch_logger::enable_logfile(1);
+	Binawatch_logger::enable_logfile(0);
 
 	struct Binawatch_shared_data shared_data; 
 	Binawatch_db::init();

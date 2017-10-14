@@ -6,7 +6,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdarg.h>
 #include <sys/types.h> 
 #include <sys/stat.h> 
 #include <fcntl.h>
@@ -61,8 +60,6 @@ class Binawatch_httpd {
 
 		static struct MHD_Daemon *daemon;
 		
-		static void write_log( const char *fmt, ... );
-		static void write_log_clean( const char *fmt, ... ); 
 		
 		static int answer_to_connection( 
 			void *cls, 

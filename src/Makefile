@@ -12,7 +12,7 @@ jsoncpp_src=${jsoncpp_dir}/src
 
 
 build_dir=../bin
-objects=$(build_dir)/jsoncpp.o $(build_dir)/binawatch_utils.o $(build_dir)/binawatch_webservices.o $(build_dir)/binawatch_db.o $(build_dir)/binawatch_httpd.o $(build_dir)/binawatch_apicaller.o
+objects=$(build_dir)/jsoncpp.o $(build_dir)/binawatch_utils.o $(build_dir)/binawatch_webservices.o $(build_dir)/binawatch_db.o $(build_dir)/binawatch_httpd.o $(build_dir)/binawatch_apicaller.o ${build_dir}/binawatch_logger.o
 
 
 
@@ -39,6 +39,10 @@ $(build_dir)/binawatch_db.o: binawatch_db.cpp binawatch_db.h
 
 $(build_dir)/binawatch_webservices.o: binawatch_webservices.cpp binawatch_webservices.h 
 	g++ -I$(libmicrohttpd_include) -I$(jsoncpp_include)  -c binawatch_webservices.cpp  -o ${build_dir}/binawatch_webservices.o 
+
+
+$(build_dir)/binawatch_logger.o: binawatch_logger.cpp binawatch_logger.h 
+	g++ -c binawatch_logger.cpp  -o ${build_dir}/binawatch_logger.o 
 
 
 $(build_dir)/binawatch_utils.o: binawatch_utils.cpp binawatch_utils.h 

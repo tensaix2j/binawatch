@@ -16,8 +16,6 @@
 #include <json/json.h>
 
 
-#include "binawatch_shared_data.h"
-#include "binawatch_utils.h"
 
 #define BINANCE_HOST "https://www.binance.com"
 
@@ -29,8 +27,7 @@ class Binawatch_apicaller {
 
 		static struct Binawatch_shared_data *shared_data;
 		static void init();
-		static void write_log( const char *fmt, ... );
-
+		
 		static void curl_api( string &url, string &result_json );
 		static void curl_api_with_header( string &url, string &result_json , vector <string> &extra_http_header);
 				

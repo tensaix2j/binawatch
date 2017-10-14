@@ -2,6 +2,7 @@
 #include "binawatch_db.h"
 #include "binawatch_httpd.h"
 #include "binawatch_utils.h"
+#include "binawatch_logger.h"
 
 
 
@@ -25,7 +26,7 @@ Binawatch_db::exec_sql_cb (
 	vector <string> row;
 
 	for (i = 0; i < argc; i++ ){
-    	//Binawatch_httpd::write_log("%s = %s", azColName[i], argv[i] ? argv[i] : "NULL");
+    	//Binawatch_logger::write_log("%s = %s", azColName[i], argv[i] ? argv[i] : "NULL");
 		string val = argv[i]? string(argv[i]) : "";
 		row.push_back( val );
    	}
@@ -40,7 +41,7 @@ Binawatch_db::exec_sql_cb (
 string 
 Binawatch_db::sanitize_arg( string &raw_arg) {
 
-	Binawatch_httpd::write_log( "<Binawatch_db::sanitize_arg> %s", raw_arg.c_str() );
+	Binawatch_logger::write_log( "<Binawatch_db::sanitize_arg> %s", raw_arg.c_str() );
 	
 	// Do not allow arg too long
 	if ( raw_arg.length() > 1024 ) {
@@ -81,17 +82,17 @@ Binawatch_db::exec_sql( const char* sql_fmt , vector <string> &sql_args )
 		}
 	}
 
-    Binawatch_httpd::write_log( "<Binawatch_db::exec_sql> %s\n", final_sql.c_str() );
+    Binawatch_logger::write_log( "<Binawatch_db::exec_sql> %s\n", final_sql.c_str() );
 	
     results_set.clear();
     int rc = sqlite3_exec(db, final_sql.c_str() , Binawatch_db::exec_sql_cb , 0, &zErrMsg);
    	
 	if( rc != SQLITE_OK ){
-		Binawatch_httpd::write_log("<Binawatch_db::exec_sql> SQL error: %s\n", zErrMsg);
+		Binawatch_logger::write_log("<Binawatch_db::exec_sql> SQL error: %s\n", zErrMsg);
 		sqlite3_free(zErrMsg);
 		return -1;
 	} else {
-		Binawatch_httpd::write_log( "<Binawatch_db::exec_sql> Records queried successfully\n");
+		Binawatch_logger::write_log( "<Binawatch_db::exec_sql> Records queried successfully\n");
 	}
 	return 0;
 }
@@ -101,15 +102,15 @@ Binawatch_db::exec_sql( const char* sql_fmt , vector <string> &sql_args )
 void 
 Binawatch_db::log_results_set() 
 {
-	Binawatch_httpd::write_log("<Binawatch_db::log_results_set>\n\n");
+	Binawatch_logger::write_log("<Binawatch_db::log_results_set>\n\n");
 		
 	int i, j;
 
 	for ( i = 0 ; i < results_set.size() ;i++ ) {
 		for ( j = 0 ; j < results_set[i].size() ; j++ ) {
-			Binawatch_httpd::write_log_clean("%s |" , results_set[i][j].c_str() );
+			Binawatch_logger::write_log_clean("%s |" , results_set[i][j].c_str() );
 		}
-		Binawatch_httpd::write_log_clean("\n");
+		Binawatch_logger::write_log_clean("\n");
 	}
 
 }
@@ -124,10 +125,10 @@ Binawatch_db::init()
 	int rc = sqlite3_open("../db/binawatch.db3", &db);
 
 	if( rc ) {
-		Binawatch_httpd::write_log("Can't open database: %s\n", sqlite3_errmsg(db));
+		Binawatch_logger::write_log("Can't open database: %s\n", sqlite3_errmsg(db));
 		
 	} else {
-      	Binawatch_httpd::write_log("Opened database successfully\n");
+      	Binawatch_logger::write_log("Opened database successfully\n");
 	}
 }
 

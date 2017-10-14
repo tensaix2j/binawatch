@@ -1,5 +1,10 @@
 
 #include "binawatch_apicaller.h"
+#include "binawatch_shared_data.h"
+#include "binawatch_utils.h"
+#include "binawatch_db.h"
+#include "binawatch_logger.h"
+
 
 
 
@@ -14,7 +19,7 @@ void
 Binawatch_apicaller::get_allBookTickers() 
 {	
 
-	write_log( "<Binawatch_apicaller::get_allBookTickers>" ) ;
+	Binawatch_logger::write_log( "<Binawatch_apicaller::get_allBookTickers>" ) ;
 
 	string url(BINANCE_HOST);  
 	url += "/api/v1/ticker/allBookTickers";
@@ -53,12 +58,12 @@ Binawatch_apicaller::get_allBookTickers()
 		 		}
 	 		}
 	    } catch ( exception &e ) {
-		 	write_log( "<Binawatch_apicaller::get_allBookTickers> Error ! %s", e.what() ); 
+		 	Binawatch_logger::write_log( "<Binawatch_apicaller::get_allBookTickers> Error ! %s", e.what() ); 
 		}   
-		write_log( "<Binawatch_apicaller::get_allBookTickers> Done." ) ;
+		Binawatch_logger::write_log( "<Binawatch_apicaller::get_allBookTickers> Done." ) ;
 	
 	} else {
-		write_log( "<Binawatch_apicaller::get_allBookTickers> Failed to get anything." ) ;
+		Binawatch_logger::write_log( "<Binawatch_apicaller::get_allBookTickers> Failed to get anything." ) ;
 	}
 
 
@@ -85,7 +90,7 @@ void
 Binawatch_apicaller::get_account( const char* api_key, const char *secret_key , string &str_result ) 
 {	
 
-	write_log( "<Binawatch_apicaller::get_account>" ) ;
+	Binawatch_logger::write_log( "<Binawatch_apicaller::get_account>" ) ;
 
 	string url(BINANCE_HOST);
 	url += "/api/v3/account?";
@@ -103,7 +108,7 @@ Binawatch_apicaller::get_account( const char* api_key, const char *secret_key , 
 	header_chunk.append( api_key );
 	extra_http_header.push_back(header_chunk);
 
-	write_log( "<Binawatch_apicaller::get_account> url = |%s|" , url.c_str() ) ;
+	Binawatch_logger::write_log( "<Binawatch_apicaller::get_account> url = |%s|" , url.c_str() ) ;
 	
 	curl_api_with_header( url, str_result , extra_http_header ) ;
 
@@ -119,38 +124,13 @@ Binawatch_apicaller::get_account( const char* api_key, const char *secret_key , 
 
 
 
-//------------------------
-void 
-Binawatch_apicaller::write_log( const char *fmt, ... ) 
-{
-    va_list arg;
-    
-    char new_fmt[1024];
-    
-   	struct timeval tv;
-    gettimeofday(&tv, NULL); 
-    time_t t = tv.tv_sec;
-    struct tm * now = localtime( &t );
-    
-    sprintf( new_fmt , "%04d-%02d-%02d %02d:%02d:%02d %06ld :%s\n" , now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec , tv.tv_usec , fmt );
-
-    va_start (arg, fmt);
-    vfprintf ( stdout, new_fmt, arg);
-    va_end (arg);
-
-    fflush(stdout);
-}
-
-
-
-
 
 //-----------------
 // Curl's callback
 size_t 
 Binawatch_apicaller::curl_cb( void *content, size_t size, size_t nmemb, std::string *buffer ) 
 {	
-	write_log( "<Binawatch_apicaller::curl_cb> " ) ;
+	Binawatch_logger::write_log( "<Binawatch_apicaller::curl_cb> " ) ;
 
 	size_t newLength = size*nmemb;
     size_t oldLength = buffer->size();
@@ -166,7 +146,7 @@ Binawatch_apicaller::curl_cb( void *content, size_t size, size_t nmemb, std::str
 
     std::copy((char*)content,(char*)content + newLength,buffer->begin()+oldLength);
 
-    write_log( "<Binawatch_apicaller::curl_cb> done" ) ;
+    Binawatch_logger::write_log( "<Binawatch_apicaller::curl_cb> done" ) ;
 
     return size*nmemb;
 }
@@ -189,7 +169,7 @@ Binawatch_apicaller::curl_api( string &url, string &result_json ) {
 void 
 Binawatch_apicaller::curl_api_with_header( string &url, string &str_result, vector <string> &extra_http_header ) 
 {
-	write_log( "<Binawatch_apicaller::curl_api>" ) ;
+	Binawatch_logger::write_log( "<Binawatch_apicaller::curl_api>" ) ;
 
 	CURL *curl;
 	CURLcode res;
@@ -218,14 +198,14 @@ Binawatch_apicaller::curl_api_with_header( string &url, string &str_result, vect
 
 		/* Check for errors */ 
 		if ( res != CURLE_OK ) {
-			write_log( "<Binawatch_apicaller::curl_api> curl_easy_perform() failed: %s" , curl_easy_strerror(res) ) ;
+			Binawatch_logger::write_log( "<Binawatch_apicaller::curl_api> curl_easy_perform() failed: %s" , curl_easy_strerror(res) ) ;
 		} 	
 		/* always cleanup */ 
 		curl_easy_cleanup(curl);
 	}
 	curl_global_cleanup();
 
-	write_log( "<Binawatch_apicaller::curl_api> done" ) ;
+	Binawatch_logger::write_log( "<Binawatch_apicaller::curl_api> done" ) ;
 
 }
 
@@ -237,7 +217,7 @@ Binawatch_apicaller::curl_api_with_header( string &url, string &str_result, vect
 void 
 Binawatch_apicaller::init() 
 {
-	write_log("<Binawatch_apicaller::init>");
+	Binawatch_logger::write_log("<Binawatch_apicaller::init>");
 
 	
 }

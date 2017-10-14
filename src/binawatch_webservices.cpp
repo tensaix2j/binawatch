@@ -5,6 +5,7 @@
 #include "binawatch_httpd.h"
 #include "binawatch_utils.h"
 #include "binawatch_db.h"
+#include "binawatch_logger.h"
 
 struct Binawatch_shared_data* Binawatch_webservices::shared_data = NULL;
 
@@ -109,7 +110,7 @@ Binawatch_webservices::url_router( struct MHD_Connection *connection, string &st
 void
 Binawatch_webservices::get_allBookTickers( string &str_response) {
 
-    Binawatch_httpd::write_log("<Binawatch_webservices::get_allBookTickers>");
+    Binawatch_logger::write_log("<Binawatch_webservices::get_allBookTickers>");
 
 
     Json::Value json_response;
@@ -149,7 +150,7 @@ Binawatch_webservices::get_allBookTickers( string &str_response) {
     Json::FastWriter fastWriter;
     str_response = fastWriter.write(json_response) ;
         
-    Binawatch_httpd::write_log("<Binawatch_webservices::get_allBookTickers> Ready to response. |%s|... ", str_response.substr(0,100).c_str() );
+    Binawatch_logger::write_log("<Binawatch_webservices::get_allBookTickers> Ready to response. |%s|... ", str_response.substr(0,100).c_str() );
     
     
 
@@ -167,7 +168,7 @@ void
 Binawatch_webservices::get_account( string &str_response , string &str_session_id ) {
 
     
-    Binawatch_httpd::write_log("<Binawatch_webservices::get_account>");
+    Binawatch_logger::write_log("<Binawatch_webservices::get_account>");
     
     Json::Value json_response;
     vector <string> sql_args;
@@ -228,7 +229,7 @@ Binawatch_webservices::get_account( string &str_response , string &str_session_i
 void 
 Binawatch_webservices::register_account( string &str_response, string &username , string &password ) 
 {
-    Binawatch_httpd::write_log("<Binawatch_webservices::register_account> username = %s, password = *** " , username.c_str() );
+    Binawatch_logger::write_log("<Binawatch_webservices::register_account> username = %s, password = *** " , username.c_str() );
     
     Json::Value json_response;
     vector <string> sql_args;
@@ -249,7 +250,7 @@ Binawatch_webservices::register_account( string &str_response, string &username 
                 
                 json_response["statusmsg"] = "OK";
                 json_response["statuscode"] = 0; 
-                Binawatch_httpd::write_log("Register OK!" );
+                Binawatch_logger::write_log("Register OK!" );
 
             } else {
                 json_response["statusmsg"] = "Some error on our server code. We'll fix it a.s.a.p";
@@ -257,7 +258,7 @@ Binawatch_webservices::register_account( string &str_response, string &username 
             }
         } else {
 
-            Binawatch_httpd::write_log("Username already exist." );
+            Binawatch_logger::write_log("Username already exist." );
             json_response["statusmsg"] = "Username already exist.";
             json_response["statuscode"] = -2; 
         }
@@ -294,7 +295,7 @@ Binawatch_webservices::register_account( string &str_response, string &username 
 void 
 Binawatch_webservices::login_account( string &str_response, string &str_session_id,  string &username , string &password ) 
 {
-    Binawatch_httpd::write_log("<Binawatch_webservices::login_account> username = %s, password = %s" , username.c_str(), password.c_str() );
+    Binawatch_logger::write_log("<Binawatch_webservices::login_account> username = %s, password = %s" , username.c_str(), password.c_str() );
     
     Json::Value json_response;
     vector <string> sql_args;
@@ -306,7 +307,7 @@ Binawatch_webservices::login_account( string &str_response, string &str_session_
         Binawatch_db::exec_sql("select username,hashed_password from tbl_users where username = ?", sql_args );
         if ( Binawatch_db::results_set.size() == 0 ) {
             
-            Binawatch_httpd::write_log("User does not exist." );
+            Binawatch_logger::write_log("User does not exist." );
             json_response["statusmsg"] = "User does not exist.";
             json_response["statuscode"] = -2; 
 
@@ -317,7 +318,7 @@ Binawatch_webservices::login_account( string &str_response, string &str_session_
                 // OK
                 json_response["statusmsg"] = "OK";
                 json_response["statuscode"] = 0; 
-                Binawatch_httpd::write_log("Login OK!" );
+                Binawatch_logger::write_log("Login OK!" );
                 Binawatch_httpd::add_login_user( str_session_id, username );
                 
             } else {
@@ -347,7 +348,7 @@ Binawatch_webservices::login_account( string &str_response, string &str_session_
 void 
 Binawatch_webservices::logout_account( string &str_response, string &str_session_id ) 
 {
-    Binawatch_httpd::write_log("<Binawatch_webservices::logout_account>" );
+    Binawatch_logger::write_log("<Binawatch_webservices::logout_account>" );
     
     Json::Value json_response;
     
@@ -368,7 +369,7 @@ Binawatch_webservices::logout_account( string &str_response, string &str_session
 void 
 Binawatch_webservices::save_apikey( string &str_response, string &str_session_id, string &apikey, string &secretkey ) {
 
-    Binawatch_httpd::write_log("<Binawatch_webservices::save_apikey>");
+    Binawatch_logger::write_log("<Binawatch_webservices::save_apikey>");
     
     Json::Value json_response;
     vector <string> sql_args;
@@ -414,7 +415,7 @@ Binawatch_webservices::save_apikey( string &str_response, string &str_session_id
 void 
 Binawatch_webservices::get_apikey( string &str_response, string &str_session_id ) {
 
-    Binawatch_httpd::write_log("<Binawatch_webservices::get_apikey>");
+    Binawatch_logger::write_log("<Binawatch_webservices::get_apikey>");
     
     Json::Value json_response;
     vector <string> sql_args;

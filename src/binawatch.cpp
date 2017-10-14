@@ -8,10 +8,13 @@
 #include "binawatch_webservices.h"
 #include "binawatch_shared_data.h"
 #include "binawatch_db.h"
+#include "binawatch_logger.h"
 
 
 //----------------------------------
 int main( int argc , char *argv[] ) {
+
+	Binawatch_logger::enable_logfile(1);
 
 	struct Binawatch_shared_data shared_data; 
 	Binawatch_db::init();

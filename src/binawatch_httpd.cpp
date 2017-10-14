@@ -4,6 +4,7 @@
 #include "binawatch_utils.h"
 #include "binawatch_apicaller.h"
 #include "binawatch_webservices.h"
+#include "binawatch_logger.h"
 #include "binawatch_db.h"
 
 
@@ -21,7 +22,7 @@ Binawatch_httpd::log_http_header (
         const char *key,
         const char *value)
 {
-    write_log ("<Binawatch_httpd::log_http_header> %s: %s", key, value);
+    Binawatch_logger::write_log ("<Binawatch_httpd::log_http_header> %s: %s", key, value);
     return MHD_YES;
 }
 
@@ -41,7 +42,7 @@ Binawatch_httpd::generate_new_session()
     
     string str_session_id = b2a_hex( bytearr_session_id , 32 );
     
-    write_log("<Binawatch_httpd::generate_new_session> Registering new session %s", str_session_id.c_str() );
+    Binawatch_logger::write_log("<Binawatch_httpd::generate_new_session> Registering new session %s", str_session_id.c_str() );
     sessions_registered[ str_session_id ] = get_current_epoch() + 3600;
 
     return str_session_id;
@@ -56,7 +57,7 @@ string
 Binawatch_httpd::get_session ( struct MHD_Connection *connection ) 
 {
 
-    write_log("<Binawatch_httpd::get_session>");
+    Binawatch_logger::write_log("<Binawatch_httpd::get_session>");
 
     const char *cookie;
     cookie = MHD_lookup_connection_value (connection, MHD_COOKIE_KIND, "session");
@@ -68,12 +69,12 @@ Binawatch_httpd::get_session ( struct MHD_Connection *connection )
 
         if ( sessions_registered.find( str_session_id ) == sessions_registered.end() ) { 
             
-            write_log("<Binawatch_httpd::get_session> Session %s expired on server end, get new one", str_session_id.c_str() );
+            Binawatch_logger::write_log("<Binawatch_httpd::get_session> Session %s expired on server end, get new one", str_session_id.c_str() );
             str_session_id = generate_new_session();
 
         } else {
 
-            write_log("<Binawatch_httpd::get_session> Session %s found !", str_session_id.c_str() );
+            Binawatch_logger::write_log("<Binawatch_httpd::get_session> Session %s found !", str_session_id.c_str() );
 
             // Renew the session expiry time..
             sessions_registered[ str_session_id ] = get_current_epoch() + 3600;
@@ -100,7 +101,7 @@ Binawatch_httpd::expiring_sessions()
         // sessions to expire in 1 hour
         if ( get_current_epoch() >= session_expiry  ) {
             
-            write_log("Session %s expired.", str_session_id.c_str() );
+            Binawatch_logger::write_log("Session %s expired.", str_session_id.c_str() );
             sessions_registered.erase( it );
 
         }
@@ -114,7 +115,7 @@ Binawatch_httpd::expiring_sessions()
 void 
 Binawatch_httpd::add_login_user( string &str_session_id, string &username ) 
 {       
-    write_log("Binawatch_httpd::add_login_user : %s", username.c_str() );
+    Binawatch_logger::write_log("Binawatch_httpd::add_login_user : %s", username.c_str() );
         
     Binawatch_db::results_set.clear();
     vector <string> sql_args;
@@ -131,7 +132,7 @@ Binawatch_httpd::add_login_user( string &str_session_id, string &username )
         new_user.secretkey   = Binawatch_db::results_set[0][2];
         new_user.expiry_time = get_current_epoch() + 3600;
 
-        write_log("Binawatch_httpd::add_login_user: %s OK", username.c_str() );
+        Binawatch_logger::write_log("Binawatch_httpd::add_login_user: %s OK", username.c_str() );
         sessions_login_users[ str_session_id ] = new_user;
     }
 
@@ -142,7 +143,7 @@ Binawatch_httpd::add_login_user( string &str_session_id, string &username )
 void 
 Binawatch_httpd::remove_login_user( string &str_session_id ) 
 {       
-    write_log("Binawatch_httpd::remove_login_user : %s", str_session_id.c_str() );
+    Binawatch_logger::write_log("Binawatch_httpd::remove_login_user : %s", str_session_id.c_str() );
     sessions_login_users.erase( str_session_id );
     
 }
@@ -180,7 +181,7 @@ Binawatch_httpd::response_with_errormsg(
     char errorstr[1024];
     sprintf( errorstr , "<html><body>%s</body></html>", error_msg ) ;
     
-    write_log("<Binawatch_httpd::response_with_errormsg> %s", error_msg );
+    Binawatch_logger::write_log("<Binawatch_httpd::response_with_errormsg> %s", error_msg );
     
     response = MHD_create_response_from_buffer ( strlen (errorstr), (void *) errorstr, MHD_RESPMEM_PERSISTENT );
 
@@ -227,7 +228,7 @@ Binawatch_httpd::response_with_static_resource(
     }
 
 
-    write_log("<Binawatch_httpd::answer_to_connection> Ready to serve %s", full_path.c_str() );
+    Binawatch_logger::write_log("<Binawatch_httpd::answer_to_connection> Ready to serve %s", full_path.c_str() );
 
 
     response = MHD_create_response_from_fd_at_offset64 (sbuf.st_size, fd, 0);
@@ -329,7 +330,7 @@ Binawatch_httpd::html_routing(
             string redirect_url = "/login.html";
             ret = response_with_static_resource( connection, response, mime_type , redirect_url ); 
         } else {
-            write_log("<Binawatch_httpd::html_routing> %p : %s", user, user->username.c_str() );
+            Binawatch_logger::write_log("<Binawatch_httpd::html_routing> %p : %s", user, user->username.c_str() );
             ret = response_with_static_resource( connection, response, mime_type , url );    
         }
 
@@ -360,7 +361,7 @@ Binawatch_httpd::answer_to_connection(
 
 
 
-    write_log("<Binawatch_httpd::answer_to_connection> New %s request for %s \n", method, url );
+    Binawatch_logger::write_log("<Binawatch_httpd::answer_to_connection> New %s request for %s \n", method, url );
     
     struct MHD_Response *response;
     int ret;
@@ -374,7 +375,7 @@ Binawatch_httpd::answer_to_connection(
     string use_url = string(url);
     if ( use_url == "/" ) {
         use_url = INDEX_PAGE;
-        write_log("<Binawatch_httpd::answer_to_connection> Redirect New %s request to %s \n", method, use_url.c_str() );
+        Binawatch_logger::write_log("<Binawatch_httpd::answer_to_connection> Redirect New %s request to %s \n", method, use_url.c_str() );
     
     }
         
@@ -483,7 +484,7 @@ Binawatch_httpd::queue_request_item(
     MHD_Response *response
 ) {
 
-    write_log("<Binawatch_httpd::queue_request_item> %d %s", exec_time , task );
+    Binawatch_logger::write_log("<Binawatch_httpd::queue_request_item> %d %s", exec_time , task );
 
     int i;
     bool inserted = 0;
@@ -513,7 +514,7 @@ Binawatch_httpd::queue_request_item(
 int 
 Binawatch_httpd::stop( ) {
 
-    write_log("<Binawatch_httpd::stop> Stopping HTTPD Daemon");
+    Binawatch_logger::write_log("<Binawatch_httpd::stop> Stopping HTTPD Daemon");
 
     if ( Binawatch_httpd::daemon != NULL ) {
         MHD_stop_daemon ( Binawatch_httpd::daemon);
@@ -524,58 +525,12 @@ Binawatch_httpd::stop( ) {
 
 
 
-
-
-
-//-----------------------------------------------
-void 
-Binawatch_httpd::write_log( const char *fmt, ... ) 
-{
-    va_list arg;
-    
-    char new_fmt[1024];
-    
-    struct timeval tv;
-    gettimeofday(&tv, NULL); 
-    time_t t = tv.tv_sec;
-    struct tm * now = localtime( &t );
-
-
-    sprintf( new_fmt , "%04d-%02d-%02d %02d:%02d:%02d %06ld :%s\n" , now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec , tv.tv_usec , fmt );
-
-    va_start (arg, fmt);
-    vfprintf ( stdout, new_fmt, arg);
-    va_end (arg);
-
-    fflush(stdout);
-
-}
-
-
-
-//-----------------------------------------------
-// Write log to channel without any timestamp nor new line
-void 
-Binawatch_httpd::write_log_clean( const char *fmt, ... ) 
-{
-    va_list arg;
-    va_start (arg, fmt);
-    vfprintf ( stdout, fmt, arg);
-    va_end (arg);
-
-    fflush(stdout);
-
-}
-
-
-
-
 //--------------------------------------------------------
 // Start the httpd server
 int
 Binawatch_httpd::init( int port )
 {
-    write_log("<Binawatch_httpd::init>");
+    Binawatch_logger::write_log("<Binawatch_httpd::init>");
 
     Binawatch_httpd::daemon = MHD_start_daemon ( 
                                 MHD_USE_SELECT_INTERNALLY, 
@@ -589,11 +544,11 @@ Binawatch_httpd::init( int port )
 
 
     if ( Binawatch_httpd::daemon == NULL ) {
-        write_log("<Binawatch_httpd::init> HTTPD Daemon failed to run!");
+        Binawatch_logger::write_log("<Binawatch_httpd::init> HTTPD Daemon failed to run!");
         return -1;
     }   
 
-    write_log("<Binawatch_httpd::init> HTTPD started at port %d", port );
+    Binawatch_logger::write_log("<Binawatch_httpd::init> HTTPD started at port %d", port );
 
     Binawatch_apicaller::shared_data = Binawatch_webservices::shared_data;
     

@@ -92,6 +92,9 @@ function Apikey() {
 				apky.submit();
 			}
 		});
+		$("#a_logout").click( function() {
+			logout();
+		});
 		this.display_apikey();
 	}
 

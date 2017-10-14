@@ -466,15 +466,7 @@ Binawatch_httpd::process_request_queue() {
                 
                 Binawatch_apicaller::get_allBookTickers();
                 queue_request_item( get_current_epoch() + 30, "allBookTickers", NULL, NULL );
-
-            } else if ( request_queue[0].task == "expiring_sessions" ) {
-
-                Binawatch_httpd::expiring_sessions();
-                queue_request_item( get_current_epoch() + 3600, "expiring_sessions", NULL, NULL );
-
-            } else if ( request_queue[0].task == "account" ) {
-
-                write_log("\n\nhello world!!!\n\n");
+                
             }
             request_queue.erase( request_queue.begin() );
         }

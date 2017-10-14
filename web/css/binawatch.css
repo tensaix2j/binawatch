@@ -4,13 +4,19 @@ body {
 	background-color: #fafafa;
 }
 
+#div_warning_header {
+	padding:20px;
+	background-color: #f8cf7e;
+	display: none;
+}
+
 
 .threadindex_list {
 	padding: 0;
   	list-style-type: none;
   	background-color: #fff;
   	width:100%;
-}
+}	
 
 
 .threadindex_list li {
@@ -28,15 +34,47 @@ body {
 
 }
 
-.curr_rate {
+.curr_rate_row {
 	font-size: 10pt;
 	font-family: Helvetica;
 }
 
-.curr_rate_inner {
+.curr_rate_col { 
+	
 	display: inline-block;
-	margin-right: 20px;
+	margin: 4px;
+	padding: 4px 4px 4px 8px;
+	border-radius: 4px;
+	vertical-align: text-top;
+}
 
+
+
+.curr_rate_col_b { 
+	background-color: #bfe8a1;
+}
+.curr_rate_col_a { 
+	background-color: #ffeeee;
+}
+.curr_rate_col_o { 
+	background-color: #fde998;
+}
+
+.curr_rate_inner {
+	margin-right: 20px;
+}
+.curr_rate_val { 
+	font-weight: bold;
+	display: inline-block;
+}
+
+.curr_rate_inner_btn {
+	height: 27px;
+	width: 120px;
+	margin-top: -4px;
+	margin-left: -4px;
+	margin-right: -4px;
+	padding-top: 2px;
 }
 
 
